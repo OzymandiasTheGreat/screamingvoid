@@ -1,0 +1,18 @@
+{
+	"name": "void",
+	"version": "0.1.0",
+	"description": "Like screaming into the Void...",
+	"author": {
+		"name": "Tomas Ravinskas",
+		"email": "tomas.rav@gmail.com",
+		"url": "https://tomasrav.me"
+	},
+	"license": "MIT",
+	"private": true,
+	"workspaces": {
+		"packages": [
+			"apps/*",
+			"packages/*"
+		]
+	}
+}
