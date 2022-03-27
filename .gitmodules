@@ -1,0 +1,3 @@
+[submodule "packages/utp"]
+	path = packages/utp
+	url = git@github.com:OzymandiasTheGreat/utp-native.git
