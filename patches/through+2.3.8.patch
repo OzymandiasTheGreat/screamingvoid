@@ -1,0 +1,13 @@
+diff --git a/node_modules/through/index.js b/node_modules/through/index.js
+index ca5fc59..5a283bd 100644
+--- a/node_modules/through/index.js
++++ b/node_modules/through/index.js
+@@ -67,6 +67,8 @@ function through (write, end, opts) {
+       stream.destroy()
+   }
+   
++  stream._read = function () {}
++
+   stream.end = function (data) {
+     if(ended) return
+     ended = true
