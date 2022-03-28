@@ -1,3 +1,6 @@
 [submodule "packages/utp"]
 	path = packages/utp
 	url = git@github.com:OzymandiasTheGreat/utp-native.git
+[submodule "packages/sodium"]
+	path = packages/sodium
+	url = git@github.com:OzymandiasTheGreat/sodium-native.git
