@@ -9,10 +9,16 @@
 	},
 	"license": "MIT",
 	"private": true,
+	"scripts": {
+		"postinstall": "patch-package"
+	},
 	"workspaces": {
 		"packages": [
 			"apps/*",
 			"packages/*"
 		]
+	},
+	"devDependencies": {
+		"patch-package": "^6.4.7"
 	}
 }
