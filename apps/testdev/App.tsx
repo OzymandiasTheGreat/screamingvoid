@@ -1,6 +1,7 @@
 import React from "react";
 import { Button, SafeAreaView, StatusBar } from "react-native";
 import utp from "@void/utp-native";
+import Sodium from "@void/sodium-universal";
 
 const App = () => {
 	const runUTPTests = () => {
@@ -10,6 +11,10 @@ const App = () => {
 	};
 	const runUTPTimeoutTests = () => {
 		require("@void/utp-native/test/timeouts");
+	};
+	const runSodiumTests = () => {
+		require("@void/sodium-universal/test/sodium-test");
+		require("@void/sodium-universal/test/vectors");
 	};
 
 	return (
@@ -24,6 +29,7 @@ const App = () => {
 				title="Run UTP Timeout Tests"
 				onPress={runUTPTimeoutTests}
 			/>
+			<Button title="Run Sodium Tests" onPress={runSodiumTests} />
 			<StatusBar barStyle={"light-content"} />
 		</SafeAreaView>
 	);

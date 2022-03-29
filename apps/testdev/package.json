@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.0.0-rc.2",
+    "@void/sodium-universal": "*",
     "@void/utp-native": "*",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/runtime": "^7.12.5",
+    "@expo/webpack-config": "^0.16.19",
     "@react-native-community/eslint-config": "^2.0.0",
     "@tauri-apps/cli": "^1.0.0-rc.7",
     "@types/react": "^17.0.43",

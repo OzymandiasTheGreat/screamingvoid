@@ -20,5 +20,9 @@
 	},
 	"devDependencies": {
 		"patch-package": "^6.4.7"
+	},
+	"resolutions": {
+		"buffer": "6.0.3",
+		"react-error-overlay": "6.0.9"
 	}
 }
