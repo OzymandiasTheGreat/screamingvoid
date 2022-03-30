@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.0.0-rc.2",
-    "@void/sodium-universal": "*",
-    "@void/utp-native": "*",
+    "@screamingvoid/sodium-universal": "*",
+    "@screamingvoid/utp-native": "*",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "expo": ">=44.0.0-0 <45.0.0",

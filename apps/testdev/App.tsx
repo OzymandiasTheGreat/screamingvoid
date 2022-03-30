@@ -1,20 +1,20 @@
 import React from "react";
 import { Button, SafeAreaView, StatusBar } from "react-native";
-import utp from "@void/utp-native";
-import Sodium from "@void/sodium-universal";
+import utp from "@screamingvoid/utp-native";
+import Sodium from "@screamingvoid/sodium-universal";
 
 const App = () => {
 	const runUTPTests = () => {
-		require("@void/utp-native/test/net");
-		require("@void/utp-native/test/udp");
-		require("@void/utp-native/test/sockets");
+		require("@screamingvoid/utp-native/test/net");
+		require("@screamingvoid/utp-native/test/udp");
+		require("@screamingvoid/utp-native/test/sockets");
 	};
 	const runUTPTimeoutTests = () => {
-		require("@void/utp-native/test/timeouts");
+		require("@screamingvoid/utp-native/test/timeouts");
 	};
 	const runSodiumTests = () => {
-		require("@void/sodium-universal/test/sodium-test");
-		require("@void/sodium-universal/test/vectors");
+		require("@screamingvoid/sodium-universal/test/sodium-test");
+		require("@screamingvoid/sodium-universal/test/vectors");
 	};
 
 	return (
