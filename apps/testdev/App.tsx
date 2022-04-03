@@ -1,7 +1,9 @@
 import React from "react";
 import { Button, SafeAreaView, StatusBar } from "react-native";
+import RNFS from "react-native-fs";
 import utp from "@screamingvoid/utp-native";
 import Sodium from "@screamingvoid/sodium-universal";
+import LevelTests from "@screamingvoid/leveldown/test";
 
 const App = () => {
 	const runUTPTests = () => {
@@ -16,6 +18,7 @@ const App = () => {
 		require("@screamingvoid/sodium-universal/test/sodium-test");
 		require("@screamingvoid/sodium-universal/test/vectors");
 	};
+	const runLevelTests = () => LevelTests(RNFS.CachesDirectoryPath);
 
 	return (
 		<SafeAreaView
@@ -30,6 +33,7 @@ const App = () => {
 				onPress={runUTPTimeoutTests}
 			/>
 			<Button title="Run Sodium Tests" onPress={runSodiumTests} />
+			<Button title="Run LevelDown Tests" onPress={runLevelTests} />
 			<StatusBar barStyle={"light-content"} />
 		</SafeAreaView>
 	);
