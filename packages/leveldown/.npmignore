@@ -1,0 +1,8 @@
+android/.cxx
+android/.gradle
+android/build
+android/lib
+leveldb
+test
+.swcrc
+android-build.sh
