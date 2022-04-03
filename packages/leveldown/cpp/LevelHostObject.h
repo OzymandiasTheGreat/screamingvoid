@@ -9,7 +9,7 @@ using namespace facebook::jsi;
 
 class JSI_EXPORT LevelHostObject: public HostObject {
 public:
-    explicit LevelHostObject();
+    explicit LevelHostObject() {};
 
 public:
     std::vector<PropNameID> getPropertyNames(Runtime& rt) override;

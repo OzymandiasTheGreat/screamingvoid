@@ -3,7 +3,7 @@ import { NativeModules, Platform } from "react-native";
 // global func declaration for JSI functions
 declare global {
 	function nativeCallSyncHook(): unknown;
-	var __LevelProxy: Record<string, Function> | undefined;
+	var __LevelProxy: Record<string, any> | undefined;
 }
 
 // Check if the constructor exists. If not, try installing the JSI bindings.
