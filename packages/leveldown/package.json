@@ -8,6 +8,11 @@
 		"url": "https://tomasrav.me/"
 	},
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/OzymandiasTheGreat/screamingvoid.git"
+	},
+	"homepage": "https://github.com/OzymandiasTheGreat/screamingvoid/tree/main/packages/leveldown#readme",
 	"scripts": {
 		"build": "swc src -d lib"
 	},
