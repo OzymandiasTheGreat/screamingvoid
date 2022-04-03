@@ -1,0 +1,47 @@
+{
+	"name": "@screamingvoid/leveldown",
+	"version": "0.1.0",
+	"description": "Native leveldb bindings as React Native JSI module. Abstract-leveldown compatible",
+	"author": {
+		"name": "Tomas Ravinskas",
+		"email": "tomas.rav@gmail.com",
+		"url": "https://tomasrav.me/"
+	},
+	"license": "MIT",
+	"scripts": {
+		"build": "swc src -d lib"
+	},
+	"main": "lib/index.js",
+	"react-native": "src/index.ts",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
+	"keywords": [
+		"react-native",
+		"android",
+		"ios",
+		"jsi",
+		"level",
+		"leveldown"
+	],
+	"devDependencies": {
+		"@swc/cli": "^0.1.57",
+		"@swc/core": "^1.2.161",
+		"@types/abstract-leveldown": "^7.2.0",
+		"@types/react": "^17.0.43",
+		"@types/react-native": "^0.67.3",
+		"nanoid": "^3.3.2",
+		"react": "17.0.2",
+		"react-native": "0.67.4",
+		"tape": "^5.5.2"
+	},
+	"peerDependencies": {
+		"react": "*",
+		"react-native": "*"
+	},
+	"dependencies": {
+		"abstract-leveldown": "^7.2.0",
+		"buffer": "^6.0.3"
+	}
+}

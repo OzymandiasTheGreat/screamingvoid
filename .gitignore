@@ -65,3 +65,7 @@ target/
 WixTools
 
 native/
+
+**/android/.cxx
+**/android/lib
+packages/leveldown/lib

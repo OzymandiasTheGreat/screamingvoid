@@ -8,9 +8,10 @@
     "web": "expo start:web"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.0.0-rc.2",
+    "@screamingvoid/leveldown": "*",
     "@screamingvoid/sodium-universal": "*",
     "@screamingvoid/utp-native": "*",
+    "@tauri-apps/api": "^1.0.0-rc.2",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "expo": ">=44.0.0-0 <45.0.0",
@@ -19,6 +20,7 @@
     "react": "17.0.2",
     "react-dom": "^17.0.2",
     "react-native": "0.67.4",
+    "react-native-fs": "^2.19.0",
     "react-native-udp": "^4.1.5",
     "react-native-web": "0.17.1",
     "readable-stream": "^3.6.0",
@@ -26,6 +28,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
+    "@babel/plugin-proposal-async-generator-functions": "^7.16.8",
     "@babel/runtime": "^7.12.5",
     "@expo/webpack-config": "^0.16.19",
     "@react-native-community/eslint-config": "^2.0.0",
