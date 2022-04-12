@@ -1,0 +1,52 @@
+{
+	"name": "@screamingvoid/fs",
+	"version": "0.1.0",
+	"description": "Node 16's fs API implemented on top of react-native-fs",
+	"author": {
+		"name": "Tomas Ravinskas",
+		"email": "tomas.rav@gmail.com",
+		"url": "https://tomasrav.me/"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/OzymandiasTheGreat/screamingvoid.git"
+	},
+	"homepage": "https://github.com/OzymandiasTheGreat/screamingvoid/tree/main/packages/fs#readme",
+	"scripts": {
+		"build": "swc -f *.ts -d . && tsc"
+	},
+	"main": "index.js",
+	"react-native": "index.ts",
+	"types": "types",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
+	"keywords": [
+		"react-native",
+		"android",
+		"ios",
+		"fs",
+		"file-system"
+	],
+	"devDependencies": {
+		"react": "17.0.2",
+		"react-native": "0.67.4",
+		"react-native-fs": "^2.19.0",
+		"tape": "^5.5.2",
+		"typescript": "^4.6.3"
+	},
+	"peerDependencies": {
+		"react": "*",
+		"react-native": "*"
+	},
+	"dependencies": {
+		"buffer": "^6.0.3",
+		"errno": "^1.0.0",
+		"events": "^3.3.0",
+		"filesystem-constants": "^1.0.0",
+		"nanoid": "^3.3.2",
+		"readable-stream": "^3.6.0"
+	}
+}
