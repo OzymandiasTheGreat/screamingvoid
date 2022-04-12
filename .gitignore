@@ -69,3 +69,4 @@ native/
 **/android/.cxx
 **/android/lib
 packages/leveldown/lib
+packages/tmp

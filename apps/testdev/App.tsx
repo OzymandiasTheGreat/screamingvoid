@@ -19,6 +19,8 @@ const App = () => {
 		require("@screamingvoid/sodium-universal/test/vectors");
 	};
 	const runLevelTests = () => LevelTests(RNFS.CachesDirectoryPath);
+	const runFSTests = () => require("@screamingvoid/fs/test");
+	const runRAFTests = () => require("random-access-file/test");
 
 	return (
 		<SafeAreaView
@@ -34,6 +36,8 @@ const App = () => {
 			/>
 			<Button title="Run Sodium Tests" onPress={runSodiumTests} />
 			<Button title="Run LevelDown Tests" onPress={runLevelTests} />
+			<Button title="Run FS Tests" onPress={runFSTests} />
+			<Button title="Run RAF Tests" onPress={runRAFTests} />
 			<StatusBar barStyle={"light-content"} />
 		</SafeAreaView>
 	);

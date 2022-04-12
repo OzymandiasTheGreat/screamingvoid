@@ -24,6 +24,8 @@ config.resolver.nodeModulesPaths = [
 ];
 
 config.resolver.extraNodeModules = {
+	fs: require.resolve("@screamingvoid/fs/index.ts"),
+	os: require.resolve("react-native-os"),
 	path: require.resolve("path-browserify"),
 	dgram: require.resolve("react-native-udp"),
 	stream: require.resolve("readable-stream"),

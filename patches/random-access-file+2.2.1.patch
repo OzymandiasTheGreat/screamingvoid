@@ -1,0 +1,70 @@
+diff --git a/node_modules/random-access-file/index.js b/node_modules/random-access-file/index.js
+index b0da75b..a4a1e0e 100644
+--- a/node_modules/random-access-file/index.js
++++ b/node_modules/random-access-file/index.js
+@@ -3,7 +3,7 @@ var RandomAccess = require('random-access-storage')
+ var fs = require('fs')
+ var mkdirp = require('mkdirp-classic')
+ var path = require('path')
+-var constants = fs.constants || require('constants') // eslint-disable-line
++var constants = fs.constants
+ 
+ var READONLY = constants.O_RDONLY
+ var READWRITE = constants.O_RDWR | constants.O_CREAT
+diff --git a/node_modules/random-access-file/test.js b/node_modules/random-access-file/test.js
+index edbc106..80153e3 100644
+--- a/node_modules/random-access-file/test.js
++++ b/node_modules/random-access-file/test.js
+@@ -1,16 +1,13 @@
+ var raf = require('./')
+ var tape = require('tape')
+-var os = require('os')
+ var path = require('path')
+ var fs = require('fs')
+-var mkdirp = require('mkdirp')
+ var isWin = process.platform === 'win32'
++var RNFS = require("react-native-fs");
+ 
+-var tmp = path.join(os.tmpdir(), 'random-access-file-' + process.pid + '-' + Date.now())
++var tmp = RNFS.CachesDirectoryPath;
+ var i = 0
+ 
+-mkdirp.sync(tmp)
+-
+ tape('write and read', function (t) {
+   var file = raf(gen())
+ 
+@@ -188,7 +185,7 @@ tape('rmdir option', function (t) {
+ 
+   function ondestroy (err) {
+     t.error(err, 'no error')
+-    fs.stat(path.join(tmp, 'rmdir'), function (err) {
++    fs.stat(path.join(tmp, 'rmdir'), function (err, s) {
+       t.same(err && err.code, 'ENOENT', 'should be removed')
+       t.end()
+     })
+@@ -202,11 +199,12 @@ tape('rmdir option with non empty parent', function (t) {
+ 
+   file.write(0, Buffer.from('hi'), function (err) {
+     t.error(err, 'no error')
+-    fs.writeFileSync(path.join(nonEmpty, 'thing'), '')
+-    file.read(0, 2, function (err, buf) {
+-      t.error(err, 'no error')
+-      t.same(buf, Buffer.from('hi'))
+-      file.destroy(ondestroy)
++    fs.writeFile(path.join(nonEmpty, 'thing'), '', () => {
++      file.read(0, 2, function (err, buf) {
++        t.error(err, 'no error')
++        t.same(buf, Buffer.from('hi'))
++        file.destroy(ondestroy)
++      })
+     })
+   })
+ 
+@@ -328,5 +326,5 @@ tape('directory filename resolves correctly', function (t) {
+ })
+ 
+ function gen () {
+-  return path.join(tmp, ++i + '.txt')
++  return path.join(tmp, Date.now() + '.txt')
+ }
