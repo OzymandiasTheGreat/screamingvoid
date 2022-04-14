@@ -11,8 +11,20 @@ index b0da75b..a4a1e0e 100644
  
  var READONLY = constants.O_RDONLY
  var READWRITE = constants.O_RDWR | constants.O_CREAT
+diff --git a/node_modules/random-access-file/package.json b/node_modules/random-access-file/package.json
+index b9dc216..03b957f 100644
+--- a/node_modules/random-access-file/package.json
++++ b/node_modules/random-access-file/package.json
+@@ -6,7 +6,6 @@
+   "scripts": {
+     "test": "standard && tape test.js"
+   },
+-  "browser": "./browser.js",
+   "dependencies": {
+     "mkdirp-classic": "^0.5.2",
+     "random-access-storage": "^1.1.1"
 diff --git a/node_modules/random-access-file/test.js b/node_modules/random-access-file/test.js
-index edbc106..80153e3 100644
+index edbc106..b6d0e6c 100644
 --- a/node_modules/random-access-file/test.js
 +++ b/node_modules/random-access-file/test.js
 @@ -1,16 +1,13 @@
@@ -34,15 +46,6 @@ index edbc106..80153e3 100644
  tape('write and read', function (t) {
    var file = raf(gen())
  
-@@ -188,7 +185,7 @@ tape('rmdir option', function (t) {
- 
-   function ondestroy (err) {
-     t.error(err, 'no error')
--    fs.stat(path.join(tmp, 'rmdir'), function (err) {
-+    fs.stat(path.join(tmp, 'rmdir'), function (err, s) {
-       t.same(err && err.code, 'ENOENT', 'should be removed')
-       t.end()
-     })
 @@ -202,11 +199,12 @@ tape('rmdir option with non empty parent', function (t) {
  
    file.write(0, Buffer.from('hi'), function (err) {

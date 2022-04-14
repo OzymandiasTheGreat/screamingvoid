@@ -26,9 +26,14 @@ config.resolver.nodeModulesPaths = [
 config.resolver.extraNodeModules = {
 	fs: require.resolve("@screamingvoid/fs/index.ts"),
 	os: require.resolve("react-native-os"),
+	net: require.resolve("react-native-tcp"),
+	dns: require.resolve("fetch-dns"),
 	path: require.resolve("path-browserify"),
 	dgram: require.resolve("react-native-udp"),
 	stream: require.resolve("readable-stream"),
+	crypto: require.resolve("react-native-crypto"),
+	"utp-native": require.resolve("@screamingvoid/utp-native"),
+	"sodium-universal": require.resolve("@screamingvoid/sodium-universal"),
 };
 
 module.exports = config;

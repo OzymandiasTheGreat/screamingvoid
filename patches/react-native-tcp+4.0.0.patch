@@ -1,0 +1,35 @@
+diff --git a/node_modules/react-native-tcp/TcpSocket.js b/node_modules/react-native-tcp/TcpSocket.js
+index 59da564..3b9e64f 100644
+--- a/node_modules/react-native-tcp/TcpSocket.js
++++ b/node_modules/react-native-tcp/TcpSocket.js
+@@ -348,7 +348,7 @@ TcpSocket.prototype._onError = function(error: string): void {
+ };
+ 
+ TcpSocket.prototype.write = function(chunk, encoding, cb) {
+-  if (typeof chunk !== 'string' && !(Buffer.isBuffer(chunk))) {
++  if (typeof chunk !== 'string' && !(Buffer.isBuffer(chunk) || chunk instanceof Uint8Array)) {
+     throw new TypeError(
+       'Invalid data, chunk must be a string or buffer, not ' + typeof chunk);
+   }
+@@ -372,6 +372,8 @@ TcpSocket.prototype._write = function(buffer: any, encoding: ?String, callback:
+     str = Base64Str.encode(buffer);
+   } else if (Buffer.isBuffer(buffer)) {
+     str = buffer.toString('base64');
++  } else if (buffer instanceof Uint8Array) {
++    str = Buffer.from(buffer).toString('base64');
+   } else {
+     throw new TypeError(
+       'Invalid data, chunk must be a string or buffer, not ' + typeof buffer);
+diff --git a/node_modules/react-native-tcp/android/build.gradle b/node_modules/react-native-tcp/android/build.gradle
+index c582eb7..5785289 100644
+--- a/node_modules/react-native-tcp/android/build.gradle
++++ b/node_modules/react-native-tcp/android/build.gradle
+@@ -44,6 +44,6 @@ repositories {
+ }
+ 
+ dependencies {
+-    compile 'com.facebook.react:react-native:+'
+-    compile 'com.koushikdutta.async:androidasync:2.1.6'
++    implementation 'com.facebook.react:react-native:+'
++    implementation 'com.koushikdutta.async:androidasync:2.1.6'
+ }
