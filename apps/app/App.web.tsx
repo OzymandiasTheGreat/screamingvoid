@@ -2,18 +2,21 @@ import React, { useContext, useEffect, useState } from "react";
 import { Button, SafeAreaView, Text, View } from "react-native";
 import { NavigationContainer, NavigationProp } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import { EventEmitter2 } from "eventemitter2";
 
 const Stack = createNativeStackNavigator();
+const Tabs = createMaterialBottomTabNavigator();
 const Context = React.createContext<EventEmitter2>(null as any);
 
-const HomeScreen: React.FC<{ navigation: NavigationProp<any> }> = ({
+const TestingTab: React.FC<{ navigation: NavigationProp<any> }> = ({
 	navigation,
 }) => {
 	return (
 		<SafeAreaView
 			style={{
 				flex: 1,
+				height: "100vh",
 				alignItems: "center",
 				justifyContent: "center",
 			}}>
@@ -22,6 +25,46 @@ const HomeScreen: React.FC<{ navigation: NavigationProp<any> }> = ({
 				onPress={() => navigation.navigate("Test")}
 			/>
 		</SafeAreaView>
+	);
+};
+
+const MessagesTab: React.FC = () => {
+	return (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				height: "100vh",
+				alignItems: "center",
+				justifyContent: "center",
+			}}>
+			<Text>This is Your inbox!</Text>
+		</SafeAreaView>
+	);
+};
+
+const FeedTab: React.FC = () => {
+	return (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				height: "100vh",
+				alignItems: "center",
+				justifyContent: "center",
+			}}>
+			<Text>This is Your feed.</Text>
+		</SafeAreaView>
+	);
+};
+
+const HomeScreen: React.FC<{ navigation: NavigationProp<any> }> = ({
+	navigation,
+}) => {
+	return (
+		<Tabs.Navigator>
+			<Tabs.Screen name="TestTab" component={TestingTab} />
+			<Tabs.Screen name="Messages" component={MessagesTab} />
+			<Tabs.Screen name="Feed" component={FeedTab} />
+		</Tabs.Navigator>
 	);
 };
 
@@ -71,7 +114,7 @@ const App: React.FC<{ emitter: EventEmitter2 }> = ({ emitter }) => {
 	return (
 		<Context.Provider value={emitter}>
 			<NavigationContainer>
-				<Stack.Navigator>
+				<Stack.Navigator screenOptions={{ headerShown: false }}>
 					<Stack.Screen name="Home" component={HomeScreen} />
 					<Stack.Screen name="Test" component={TestScreen} />
 				</Stack.Navigator>
