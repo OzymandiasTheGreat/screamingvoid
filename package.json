@@ -10,6 +10,7 @@
 	"license": "MIT",
 	"private": true,
 	"scripts": {
+		"reset": "find . -type d -name node_modules -maxdepth 3 | xargs rm -rf && rm yarn.lock",
 		"postinstall": "patch-package"
 	},
 	"workspaces": {

@@ -22,7 +22,7 @@
         "icons/icon.ico"
       ],
       "resources": [],
-      "externalBin": [],
+      "externalBin": ["binaries/backend"],
       "copyright": "",
       "category": "DeveloperTool",
       "shortDescription": "",
@@ -49,7 +49,17 @@
       "active": false
     },
     "allowlist": {
-      "all": true
+      "all": true,
+      "shell": {
+        "sidecar": true,
+        "scope": [
+          {
+            "cmd": "backend",
+            "name": "binaries/backend",
+            "sidecar": true
+          }
+        ]
+      }
     },
     "windows": [
       {

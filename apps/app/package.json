@@ -7,11 +7,14 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "web": "expo start:web",
+    "sidecar": "yarn --cwd src-node build && yarn pkg src-node/package.json --compress Brotli --output src-tauri/binaries/backend && node scripts/move-binary.js",
     "test": "jest",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@notifee/react-native": "^5.1.0",
     "@tauri-apps/api": "^1.0.0-rc.3",
+    "eventemitter2": "^6.4.5",
     "expo": ">=44.0.0-0 <45.0.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
@@ -25,6 +28,7 @@
     "@react-native-community/eslint-config": "^2.0.0",
     "@tauri-apps/cli": "^1.0.0-rc.8",
     "@types/jest": "^26.0.23",
+    "@types/react": "~17.0.21",
     "@types/react-native": "^0.66.4",
     "@types/react-test-renderer": "^17.0.1",
     "@typescript-eslint/eslint-plugin": "^5.7.0",
@@ -34,6 +38,7 @@
     "eslint": "^7.14.0",
     "jest": "^26.6.3",
     "metro-react-native-babel-preset": "^0.66.2",
+    "pkg": "^5.6.0",
     "react-test-renderer": "17.0.2",
     "typescript": "^4.4.4"
   },

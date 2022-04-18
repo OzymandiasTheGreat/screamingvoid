@@ -70,3 +70,4 @@ native/
 **/android/lib
 packages/leveldown/lib
 packages/tmp
+**/src-tauri/binaries
