@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Button, SafeAreaView, StatusBar } from "react-native";
 import RNFS from "react-native-fs";
-import hyperbeam from "hyperbeam";
 import utp from "@screamingvoid/utp-native";
 import Sodium from "@screamingvoid/sodium-universal";
 import LevelTests from "@screamingvoid/leveldown/test";
@@ -22,13 +21,6 @@ const App = () => {
 	const runLevelTests = () => LevelTests(RNFS.CachesDirectoryPath);
 	const runFSTests = () => require("@screamingvoid/fs/test");
 	const runRAFTests = () => require("random-access-file/test");
-
-	useEffect(() => {
-		const beam = new hyperbeam(
-			"3gq7qnbhypsu7sb66mpalerss7y2aqpcpfpqljwl4yfzqiwisrda",
-		);
-		beam.on("data", (data) => console.log(data.toString()));
-	});
 
 	return (
 		<SafeAreaView
