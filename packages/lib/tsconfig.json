@@ -5,6 +5,7 @@
     "outDir": "./lib",
     "declarationDir": "./types",
     "declaration": true,
+    "allowJs": true,
   },
   "include": ["./src"],
 }
