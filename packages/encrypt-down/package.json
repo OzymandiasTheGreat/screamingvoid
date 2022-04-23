@@ -1,0 +1,43 @@
+{
+	"name": "@screamingvoid/encrypt-down",
+	"version": "0.1.0",
+	"description": "libsodium based encryption layer for abstract-leveldown compatible stores",
+	"author": {
+		"name": "Tomas Ravinskas",
+		"email": "tomas.rav@gmail.com",
+		"url": "https://tomasrav.me/"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/OzymandiasTheGreat/screamingvoid.git"
+	},
+	"homepage": "https://github.com/OzymandiasTheGreat/screamingvoid/tree/main/packages/encrypt-down#readme",
+	"scripts": {},
+	"main": "lib/index.js",
+	"types": "types",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org/"
+	},
+	"keywords": [
+		"level",
+		"leveldown",
+		"levelup",
+		"libsodium",
+		"sodium",
+		"encryption"
+	],
+	"devDependencies": {
+		"@types/abstract-leveldown": "^7.2.0",
+		"@types/leveldown": "^4.0.3",
+		"leveldown": "^6.1.1",
+		"nanoid": "^3.3.3",
+		"tape": "^5.5.2",
+		"typescript": "^4.6.3"
+	},
+	"dependencies": {
+		"abstract-leveldown": "^7.2.0",
+		"sodium-universal": "^3.1.0"
+	}
+}
