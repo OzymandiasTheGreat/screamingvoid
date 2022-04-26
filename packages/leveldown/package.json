@@ -16,8 +16,7 @@
 	"scripts": {
 		"build": "swc src -d lib"
 	},
-	"main": "lib/index.js",
-	"react-native": "src/index.ts",
+	"main": "index.js",
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://registry.npmjs.org/"
