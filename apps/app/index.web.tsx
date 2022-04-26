@@ -10,6 +10,7 @@ const emitter = new EventEmitter2();
 
 event.listen("backend-out", ({ payload }) => {
 	const ev = JSON.parse(payload as string);
+	console.log(ev);
 	emitter.emit(ev.event, ev.payload);
 });
 emitter.onAny((ev, payload) => {

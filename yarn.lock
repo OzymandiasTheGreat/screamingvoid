@@ -2056,7 +2056,7 @@
     "@swc/core-win32-ia32-msvc" "1.2.168"
     "@swc/core-win32-x64-msvc" "1.2.168"
 
-"@tauri-apps/api@^1.0.0-rc.2", "@tauri-apps/api@^1.0.0-rc.3":
+"@tauri-apps/api@1.0.0-rc.3", "@tauri-apps/api@^1.0.0-rc.2", "@tauri-apps/api@^1.0.0-rc.3":
   version "1.0.0-rc.3"
   resolved "https://registry.yarnpkg.com/@tauri-apps/api/-/api-1.0.0-rc.3.tgz#e80ddbe832bf003537d94801d508a7f7e25ac48b"
   integrity sha512-/ZbyBjuUoU6mYm8RzibIUvVuJ31ZwYA2+fTRl7FF4LVFhzCVJ1YI1BS5ohGb2GsLNmLpfeo7kDHaIhV2uaOchQ==
@@ -2301,16 +2301,7 @@
   dependencies:
     "@types/react" "^17"
 
-"@types/react@*":
-  version "18.0.5"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.5.tgz#1a4d4b705ae6af5aed369dec22800b20f89f5301"
-  integrity sha512-UPxNGInDCIKlfqBrm8LDXYWNfLHwIdisWcsH5GpMyGjhEDLFgTtlRBaoWuCua9HcyuE0rMkmAeZ3FXV1pYLIYQ==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^17", "@types/react@^17.0.43", "@types/react@~17.0.21":
+"@types/react@*", "@types/react@^17", "@types/react@^17.0.43", "@types/react@~17.0.21":
   version "17.0.44"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.44.tgz#c3714bd34dd551ab20b8015d9d0dbec812a51ec7"
   integrity sha512-Ye0nlw09GeMp2Suh8qoOv0odfgCoowfM/9MG6WeRD60Gq9wS90bdkdRtYbRkNhXOpG4H+YXGvj4wOWhAC0LJ1g==
@@ -5791,6 +5782,11 @@ expo-pwa@0.0.115:
     chalk "^4.0.0"
     commander "2.20.0"
     update-check "1.5.3"
+
+expo-secure-store@~11.1.0:
+  version "11.1.1"
+  resolved "https://registry.yarnpkg.com/expo-secure-store/-/expo-secure-store-11.1.1.tgz#16f727f56f5b0eef9817fc0d64d79be26f8a34a8"
+  integrity sha512-pCajYYoZbl8IORxXw83SLUsWlU6a+HmjJZP8oiSvkG1KnZ5gPepiAMRRmcFUApYXBgiOvKRGOBEUfVwmR7yO4A==
 
 "expo@>=44.0.0-0 <45.0.0":
   version "44.0.6"
@@ -12717,6 +12713,13 @@ tar@^6.0.2:
     minizlib "^2.1.1"
     mkdirp "^1.0.3"
     yallist "^4.0.0"
+
+"tauri-plugin-store-api@github:tauri-apps/tauri-plugin-store#dev":
+  version "0.1.0"
+  resolved "https://codeload.github.com/tauri-apps/tauri-plugin-store/tar.gz/7ac980a81683b49672d18b7f0d01cd04dc3a7ca0"
+  dependencies:
+    "@tauri-apps/api" "1.0.0-rc.3"
+    tslib "2.3.1"
 
 temp-dir@^1.0.0:
   version "1.0.0"

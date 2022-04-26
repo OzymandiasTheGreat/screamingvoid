@@ -8,10 +8,34 @@ use tauri::{
 	api::process::{Command, CommandEvent},
 	Manager,
 };
+use tauri_plugin_store::PluginBuilder;
+use keyring::Entry;
+
+const SERVICE: &str = "me.screamingvoid.app";
+
+#[tauri::command]
+fn get_identity(public_key: String) -> Result<String, String> {
+	let entry = Entry::new(SERVICE, &*public_key);
+	let id = entry.get_password();
+	match id {
+		Ok(json) => Ok(json),
+		Err(err) => Err(err.to_string()),
+	}
+}
+
+#[tauri::command]
+fn set_identity(public_key: String, identity: String) -> Result<(), String> {
+	let entry = Entry::new(SERVICE, &*public_key);
+	let result = entry.set_password(&*identity);
+	match result {
+		Ok(_) => Ok(()),
+		Err(err) => Err(err.to_string()),
+	}
+}
 
 fn main() {
   tauri::Builder::default()
-    .setup(|app| {
+	.setup(|app| {
 		let window = app.get_window("main").unwrap();
 		tauri::async_runtime::spawn(async move {
 			let (mut rx, mut child) = Command::new_sidecar("backend")
@@ -35,6 +59,8 @@ fn main() {
 
 		Ok(())
 	})
-    .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+	.plugin(PluginBuilder::default().build())
+	.invoke_handler(tauri::generate_handler![get_identity, set_identity])
+	.run(tauri::generate_context!())
+	.expect("error while running tauri application");
 }

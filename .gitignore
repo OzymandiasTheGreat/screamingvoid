@@ -70,5 +70,8 @@ native/
 **/android/lib
 packages/leveldown/lib
 packages/tmp
-packages/lib/fixtures
+packages/core/lib
+packages/core/types
+packages/core/fixtures
 **/src-tauri/binaries
+**/src-node/bin

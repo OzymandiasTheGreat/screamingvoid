@@ -1,4 +1,5 @@
 import readline from "readline";
+import type { SavedIdentity } from "../../src/types/identity";
 
 function onMessage(callback: (msg: any) => void) {
 	const rl = readline.createInterface({
@@ -23,8 +24,22 @@ function send(msg: any) {
 function main() {
 	let interval: any;
 	let count = 0;
+	let identity: SavedIdentity | null = null;
 	onMessage((msg) => {
 		switch (msg.event) {
+			case "isLoaded":
+				send({
+					event: "loaded",
+					payload: !!identity,
+				});
+				break;
+			case "requestLoad":
+				identity = msg.payload;
+				send({
+					event: "loaded",
+					payload: true,
+				});
+				break;
 			case "start":
 				interval = setInterval(
 					() => send({ event: "run", payload: ++count }),

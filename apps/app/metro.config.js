@@ -16,4 +16,10 @@ config.resolver.nodeModulesPaths = [
 	path.resolve(workspaceRoot, "node_modules"),
 ];
 
+config.resolver.extraNodeModules = {
+	fs: require.resolve("@screamingvoid/fs"),
+	os: require.resolve("react-native-os"),
+	path: require.resolve("path-browserify"),
+};
+
 module.exports = config;

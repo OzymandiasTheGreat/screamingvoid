@@ -5,7 +5,11 @@ module.exports = {
 		[
 			"module-resolver",
 			{
-				alias: {},
+				alias: {
+					leveldown: "@screamingvoid/leveldown",
+					"sodium-universal": "@screamingvoid/sodium-universal",
+					"utp-native": "@screamingvoid/utp-native",
+				},
 			},
 		],
 	],
