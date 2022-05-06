@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message StoredConversation {
+	bytes id = 1;
+	map<string, bytes> peers = 2;
+}

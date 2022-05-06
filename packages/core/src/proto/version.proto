@@ -1,0 +1,14 @@
+syntax = "proto2";
+
+enum Purpose {
+	PEER = 0;
+	MIRRORING = 1;
+	MODERATION = 2;
+	ADVERTISEMENT = 3;
+}
+
+message VersionTag {
+	int32 version = 1;
+	Purpose purpose = 2;
+	int64 profile = 3;
+}

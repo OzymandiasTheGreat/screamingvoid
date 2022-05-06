@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message Image {
+	string mimetype = 1;
+	bytes data = 2;
+}
