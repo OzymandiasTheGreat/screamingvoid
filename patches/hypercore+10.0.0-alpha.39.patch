@@ -1,0 +1,13 @@
+diff --git a/node_modules/hypercore/index.js b/node_modules/hypercore/index.js
+index 9984fab..d2284fe 100644
+--- a/node_modules/hypercore/index.js
++++ b/node_modules/hypercore/index.js
+@@ -9,7 +9,7 @@ const NoiseSecretStream = require('@hyperswarm/secret-stream')
+ const Protomux = require('protomux')
+ const codecs = require('codecs')
+ 
+-const fsctl = requireMaybe('fsctl') || { lock: noop, sparse: noop }
++const fsctl = requireMaybe('fsctl') || { lock: () => true, sparse: noop }
+ 
+ const Replicator = require('./lib/replicator')
+ const Core = require('./lib/core')

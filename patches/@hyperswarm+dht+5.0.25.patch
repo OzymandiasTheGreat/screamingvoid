@@ -1,9 +1,9 @@
 diff --git a/node_modules/@hyperswarm/dht/package.json b/node_modules/@hyperswarm/dht/package.json
-index fc3b30d..e5b5da8 100644
+index f31e79c..4c2fb81 100644
 --- a/node_modules/@hyperswarm/dht/package.json
 +++ b/node_modules/@hyperswarm/dht/package.json
 @@ -3,7 +3,6 @@
-   "version": "5.0.24",
+   "version": "5.0.25",
    "description": "The DHT powering the HyperSwarm stack",
    "main": "index.js",
 -  "browser": "browser.js",

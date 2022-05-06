@@ -9,6 +9,8 @@
 	},
 	"license": "MIT",
 	"private": true,
+	"main": "lib/index.js",
+	"types": "types",
 	"devDependencies": {
 		"@types/leveldown": "^4.0.3",
 		"@types/levelup": "^5.1.1",
@@ -18,11 +20,12 @@
 	},
 	"dependencies": {
 		"@geut/hyperbee-live-stream": "^1.0.6",
+		"@screamingvoid/encrypt-down": "*",
 		"autobase": "^1.0.0-alpha.8",
-		"corestore": "^6.0.1-alpha.14",
+		"corestore": "^6.0.1-alpha.17",
 		"eventemitter2": "^6.4.5",
 		"hyperbee": "^1.8.0",
-		"hypercore": "^10.0.0-alpha.36",
+		"hypercore": "^10.0.0-alpha.39",
 		"hyperswarm": "^3.0.4",
 		"leveldown": "^6.1.1",
 		"levelup": "^5.1.1",
