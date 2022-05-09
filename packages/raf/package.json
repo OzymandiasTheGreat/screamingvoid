@@ -1,0 +1,35 @@
+{
+	"name": "@screamingvoid/random-access-file",
+	"version": "0.1.0",
+	"description": "React-Native version of random-access-file built around react-native-fs",
+	"contributors": [
+		{
+			"name": "Tomas Ravinskas",
+			"email": "tomas.rav@gmail.com",
+			"url": "https://tomasrav.me"
+		}
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/OzymandiasTheGreat/screamingvoid"
+	},
+	"main": "index.js",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
+	"dependencies": {
+		"random-access-storage": "^1.4.3",
+		"react-native-fs": "^2.20.0",
+		"util": "^0.12.4"
+	},
+	"devDependencies": {
+		"react": "17.0.2",
+		"react-native": "0.68.1"
+	},
+	"peerDependencies": {
+		"react": "*",
+		"react-native": "*"
+	}
+}
