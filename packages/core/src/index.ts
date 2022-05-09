@@ -1,13 +1,7 @@
 import { EncryptDown } from "@screamingvoid/encrypt-down";
 import { Buffer } from "buffer";
 import Corestore from "corestore";
-import {
-	event,
-	EventEmitter2,
-	Listener,
-	ListenerFn,
-	OnOptions,
-} from "eventemitter2";
+import { EventEmitter2, Listener, ListenerFn } from "eventemitter2";
 import { mkdir } from "fs/promises";
 import HyperBee from "hyperbee";
 import Hyperswarm from "hyperswarm";
@@ -40,7 +34,6 @@ export class VoidIdentity extends EventEmitter2 {
 
 	corestore: Corestore;
 	feed: HyperBee;
-	private _feedReady: Defered<void>;
 
 	swarm!: Hyperswarm;
 	private _swarmReady: Defered<void>;
@@ -82,17 +75,10 @@ export class VoidIdentity extends EventEmitter2 {
 		this.feed = new HyperBee(
 			this.corestore.get({ keyPair, encryptionKey }),
 		);
-		this._feedReady = new Defered();
-		this.feed
-			.ready()
-			.then(this._feedReady.resolve)
-			.catch(this._feedReady.reject);
-
 		this._storageReady = new Defered();
 		this._swarmReady = new Defered();
 
 		this.ready = Promise.all([
-			this._feedReady.promise,
 			this._storageReady.promise,
 			this._swarmReady.promise,
 		]).then(() => {});
@@ -190,34 +176,19 @@ export class VoidIdentity extends EventEmitter2 {
 	): Promise<VoidIdentity> {
 		const id = new VoidIdentity(prefix, keyPair, encryptionKey);
 		await id.openStorage(prefix);
-		console.log("STORAGE OPEN");
-		await id._feedReady.promise;
-		console.log("FEED READY");
+		await id.feed.ready();
 		await id.feed.put(VOID_PEER_NAME, Buffer.from(name));
-		console.log("PUT NAME");
 		await id.feed.put(VOID_PEER_BIO, Buffer.from(bio));
-		console.log("PUT BIO");
 		await id.feed.put(VOID_PEER_AVATAR, uriToImage(avatar));
-		console.log("PUT AVATAR");
-		console.log(
-			// await id.feed.put(
-			// 	VOID_VERSION,
-			// 	VersionTag.encode({
-			// 		version: 0,
-			// 		purpose: Purpose.PEER,
-			// 		profile: Date.now(),
-			// 	}),
-			// ),
-			await id.feed.put(VOID_VERSION, "Hello, World!"),
+		await id.feed.put(
+			VOID_VERSION,
+			VersionTag.encode({
+				version: 0,
+				purpose: Purpose.PEER,
+				profile: Date.now(),
+			}),
 		);
-		console.log(
-			await id.feed
-				.get(VOID_PEER_NAME)
-				.catch((err) => console.error(err)),
-		);
-		console.log("PUT VERSION");
 		await id.connect();
-		console.log("CONNECT");
 		return id.ready.then(() => id);
 	}
 
@@ -228,18 +199,12 @@ export class VoidIdentity extends EventEmitter2 {
 	): Promise<VoidIdentity> {
 		const id = new VoidIdentity(prefix, keyPair, encryptionKey);
 		await id.openStorage(prefix);
-		console.log("STORAGE OPEN");
-		await id._feedReady.promise;
-		console.log("FEED READY");
-		const tag = await id.feed
-			.get(VOID_VERSION)
-			.catch((err) => console.log(err));
-		console.log(tag);
+		await id.feed.ready();
+		const tag = await id.feed.get(VOID_VERSION);
 		if (!tag) {
 			throw new IdentityNotFound();
 		}
 		await id.connect();
-		console.log("CONNECTED");
 		return id.ready.then(() => id);
 	}
 
