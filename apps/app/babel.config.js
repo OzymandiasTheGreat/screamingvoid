@@ -8,6 +8,7 @@ module.exports = function (api) {
 				"module-resolver",
 				{
 					alias: {
+						fs: "@screamingvoid/fs",
 						leveldown: "@screamingvoid/leveldown",
 						"random-access-file":
 							"@screamingvoid/random-access-file",

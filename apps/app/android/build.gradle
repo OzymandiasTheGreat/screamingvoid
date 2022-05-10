@@ -58,5 +58,9 @@ allprojects {
             }
         }
         maven { url 'https://www.jitpack.io' }
+
+        maven {
+            url "$rootDir/../../../node_modules/@notifee/react-native/android/libs"
+        }
     }
 }
