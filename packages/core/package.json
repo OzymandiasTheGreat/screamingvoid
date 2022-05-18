@@ -20,7 +20,7 @@
 	},
 	"dependencies": {
 		"@geut/hyperbee-live-stream": "^1.0.6",
-		"@screamingvoid/encrypt-down": "*",
+		"@screamingvoid/encrypt-down": "/home/ozymandias/Projects/void/packages/encrypt-down",
 		"autobase": "^1.0.0-alpha.8",
 		"corestore": "^6.0.1-alpha.17",
 		"eventemitter2": "^6.4.5",
