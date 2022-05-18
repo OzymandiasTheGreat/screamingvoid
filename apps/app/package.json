@@ -2,11 +2,10 @@
   "name": "void",
   "version": "1.0.0",
   "scripts": {
-    "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
-    "eject": "expo eject"
+    "web": "expo start:web",
+    "sidecar": "yarn --cwd src-node build && yarn --cwd src-node caxa && node scripts/move-binary.js"
   },
   "dependencies": {
     "@notifee/react-native": "^5.2.1",
@@ -20,6 +19,7 @@
     "@screamingvoid/random-access-file": "*",
     "@screamingvoid/sodium-universal": "*",
     "@screamingvoid/utp-native": "*",
+    "@tauri-apps/api": "^1.0.0-rc.5",
     "buffer": "^6.0.3",
     "eventemitter2": "^6.4.5",
     "expo": "~45.0.0",
@@ -47,14 +47,17 @@
     "sodium-universal": "^3.1.0",
     "stream-browserify": "^3.0.0",
     "subleveldown": "^6.0.1",
+    "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#dev",
     "util": "^0.12.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
     "@babel/plugin-proposal-async-generator-functions": "^7.16.8",
+    "@tauri-apps/cli": "^1.0.0-rc.10",
     "@types/react": "~17.0.21",
     "@types/react-native": "~0.66.13",
     "babel-plugin-module-resolver": "^4.1.0",
+    "pkg": "^5.6.0",
     "typescript": "~4.3.5"
   },
   "private": true
