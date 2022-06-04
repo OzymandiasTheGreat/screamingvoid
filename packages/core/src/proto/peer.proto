@@ -2,11 +2,11 @@ syntax = "proto2";
 
 message CachedPeer {
 	bytes publicKey = 1;
-	bytes curvePublicKey = 2;
+	bytes boxPublicKey = 2;
 	bytes sharedSecret = 3;
+	bytes hostId = 4;
 
-	int64 profile = 4;
-
-	string name = 5;
-	string bio = 6;
+	int64 profile = 6;
+	string name = 7;
+	string bio = 8;
 }

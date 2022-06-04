@@ -1,10 +1,10 @@
 type CachedPeer = {
 	publicKey: Buffer;
-	curvePublicKey: Buffer;
+	boxPublicKey: Buffer;
 	sharedSecret: Buffer;
+	hostId: Buffer;
 
 	profile: number;
-
 	name: string;
 	bio: string;
 };

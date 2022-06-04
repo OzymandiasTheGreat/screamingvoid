@@ -21,3 +21,7 @@ export const VOID_PEER_AVATAR = Buffer.concat([
 ]);
 
 export const REPLICATION = "VOID_REPLICATION_STREAM";
+
+export const CONVO_ID_LEN = 24;
+export const CONVO_REQUEST = Buffer.from("R");
+export const CONVO_INPUT = Buffer.from("M");

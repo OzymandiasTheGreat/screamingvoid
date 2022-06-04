@@ -1,6 +1,66 @@
 syntax = "proto2";
 
-message StoredConversation {
+message ConversationMeta {
+	string name = 1;
+	bool archived = 2;
+	bool muted = 3;
+}
+
+message ConversationPeer {
+	bytes input = 1;
+	bytes storage = 2;
+}
+
+message ConversationInput {
+	string name = 1;
+	map<string, ConversationPeer> peers = 2;
+}
+
+message ConversationRequest {
+	string name = 1;
+	repeated bytes peers = 2;
+}
+
+enum ChatInputType {
+	POST = 1;
+	REPLY = 2;
+	DELETE = 3;
+	REACT = 4;
+}
+
+enum ChatReactionType {
+	NONE = 0;
+	LIKE = 1;
+}
+
+message ChatReaction {
+	ChatReactionType type = 1;
+	bytes sender = 2;
+}
+
+message ChatHash {
+	bytes body = 1;
+	map<string, bytes> attachments = 2;
+}
+
+message ChatMessage {
 	bytes id = 1;
-	map<string, bytes> peers = 2;
+	bytes sender = 2;
+	uint64 timestamp = 3;
+	ChatHash hashes = 4;
+	string body = 5;
+	repeated ChatReaction reaction = 6;
+	optional bytes target = 7;
+	repeated string attachments = 8;
+}
+
+message ChatInput {
+	ChatInputType type = 1;
+	bytes sender = 2;
+	uint64 timestamp = 3;
+	ChatHash hashes = 4;
+	optional bytes target = 5;
+	optional string body = 6;
+	optional ChatReactionType reaction = 7;
+	repeated string attachments = 8;
 }

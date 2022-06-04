@@ -530,7 +530,7 @@ declare module "sodium-universal" {
 	export declare function crypto_generichash(
 		out: Uint8Array,
 		inp: Uint8Array,
-		key: Uint8Array | null,
+		key?: Uint8Array | null,
 	): void;
 	export declare function crypto_generichash_init(
 		state: Uint8Array,
