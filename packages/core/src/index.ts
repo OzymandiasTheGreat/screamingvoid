@@ -21,6 +21,7 @@ import { VoidConversation } from "./conversation";
 import { ConvoNotFound, IdentityNotFound } from "./errors";
 import { VoidPeer } from "./peer";
 import {
+	ChatMessage,
 	ConversationInput,
 	ConversationMeta,
 	ConversationPeer,
@@ -100,6 +101,42 @@ export class VoidIdentity extends EventEmitter2 {
 	on(
 		event: ["peer", "avatar"],
 		listener: (data: { publicKey: Buffer; avatar: string }) => void,
+	): Listener;
+	on(
+		event: ["peer", "error"],
+		listener: (data: { publicKey: Buffer; error: Error }) => void,
+	): Listener;
+	on(
+		event: ["conversation", "rename"],
+		listener: (data: { id: Buffer; name: string }) => void,
+	): Listener;
+	on(
+		event: ["conversation", "request"],
+		listener: (data: {
+			id: Buffer;
+			name: string;
+			peers: { publicKey: string; name?: string; bio?: string };
+		}) => void,
+	): Listener;
+	on(
+		event: ["conversation", "message"],
+		listener: (data: {
+			conversation: Buffer;
+			message: ChatMessage;
+			replyTo: Buffer;
+		}) => void,
+	): Listener;
+	on(
+		event: ["conversation", "remove"],
+		listener: (data: { conversation: Buffer; message: Buffer }) => void,
+	): Listener;
+	on(
+		event: ["conversation", "react"],
+		listener: (data: {
+			conversation: Buffer;
+			target: Buffer;
+			replyTo: Buffer;
+		}) => void,
 	): Listener;
 	on(event: string | string[], listener: ListenerFn): Listener {
 		return super.on(event, listener, { objectify: true }) as Listener;
