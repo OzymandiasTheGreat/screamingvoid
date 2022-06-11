@@ -1,0 +1,14 @@
+diff --git a/node_modules/b4a/package.json b/node_modules/b4a/package.json
+index 144225f..e6c0748 100644
+--- a/node_modules/b4a/package.json
++++ b/node_modules/b4a/package.json
+@@ -8,9 +8,6 @@
+     "index.js",
+     "lib"
+   ],
+-  "browser": {
+-    "./index.js": "./browser.js"
+-  },
+   "scripts": {
+     "test": "standard && brittle test/*.mjs"
+   },

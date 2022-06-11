@@ -1,0 +1,13 @@
+diff --git a/node_modules/buffer/index.js b/node_modules/buffer/index.js
+index 7a0e9c2..3593a34 100644
+--- a/node_modules/buffer/index.js
++++ b/node_modules/buffer/index.js
+@@ -609,7 +609,7 @@ Buffer.prototype.toString = function toString () {
+ Buffer.prototype.toLocaleString = Buffer.prototype.toString
+ 
+ Buffer.prototype.equals = function equals (b) {
+-  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
++  if (!(Buffer.isBuffer(b) || b instanceof Uint8Array )) throw new TypeError('Argument must be a Buffer')
+   if (this === b) return true
+   return Buffer.compare(this, b) === 0
+ }

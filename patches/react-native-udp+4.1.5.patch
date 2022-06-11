@@ -1,97 +1,56 @@
-diff --git a/node_modules/react-native-tcp/TcpSocket.js b/node_modules/react-native-tcp/TcpSocket.js
-index 59da564..95e7a2f 100644
---- a/node_modules/react-native-tcp/TcpSocket.js
-+++ b/node_modules/react-native-tcp/TcpSocket.js
-@@ -72,7 +72,7 @@ TcpSocket.prototype._debug = function() {
-   if (__DEV__) {
-     var args = [].slice.call(arguments);
-     args.unshift('socket-' + this._id);
--    console.log.apply(console, args);
-+    // console.log.apply(console, args);
-   }
- };
- 
-@@ -348,7 +348,7 @@ TcpSocket.prototype._onError = function(error: string): void {
- };
- 
- TcpSocket.prototype.write = function(chunk, encoding, cb) {
--  if (typeof chunk !== 'string' && !(Buffer.isBuffer(chunk))) {
-+  if (typeof chunk !== 'string' && !(Buffer.isBuffer(chunk) || chunk instanceof Uint8Array)) {
-     throw new TypeError(
-       'Invalid data, chunk must be a string or buffer, not ' + typeof chunk);
-   }
-@@ -372,6 +372,8 @@ TcpSocket.prototype._write = function(buffer: any, encoding: ?String, callback:
-     str = Base64Str.encode(buffer);
-   } else if (Buffer.isBuffer(buffer)) {
-     str = buffer.toString('base64');
-+  } else if (buffer instanceof Uint8Array) {
-+    str = Buffer.from(buffer).toString("base64");
-   } else {
-     throw new TypeError(
-       'Invalid data, chunk must be a string or buffer, not ' + typeof buffer);
-diff --git a/node_modules/react-native-tcp/android/build.gradle b/node_modules/react-native-tcp/android/build.gradle
-index c582eb7..5785289 100644
---- a/node_modules/react-native-tcp/android/build.gradle
-+++ b/node_modules/react-native-tcp/android/build.gradle
-@@ -44,6 +44,6 @@ repositories {
- }
- 
- dependencies {
--    compile 'com.facebook.react:react-native:+'
--    compile 'com.koushikdutta.async:androidasync:2.1.6'
-+    implementation 'com.facebook.react:react-native:+'
-+    implementation 'com.koushikdutta.async:androidasync:2.1.6'
- }
-diff --git a/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/results.bin b/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/results.bin
+diff --git a/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/results.bin b/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/results.bin
 new file mode 100644
 index 0000000..0d259dd
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/results.bin
++++ b/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/results.bin
 @@ -0,0 +1 @@
 +o/classes
-diff --git a/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/transformed/classes/classes.dex b/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/transformed/classes/classes.dex
+diff --git a/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/transformed/classes/classes.dex b/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/transformed/classes/classes.dex
 new file mode 100644
-index 0000000..9ab8151
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/.transforms/85e2a6d6646b1e91c96e5eb940892ad8/transformed/classes/classes.dex differ
-diff --git a/node_modules/react-native-tcp/android/build/generated/source/buildConfig/debug/com/peel/react/BuildConfig.java b/node_modules/react-native-tcp/android/build/generated/source/buildConfig/debug/com/peel/react/BuildConfig.java
+index 0000000..31b89c0
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/.transforms/23f2c44fc99aeea814243b04bb22dbcf/transformed/classes/classes.dex differ
+diff --git a/node_modules/react-native-udp/android/build/generated/source/buildConfig/debug/com/tradle/react/BuildConfig.java b/node_modules/react-native-udp/android/build/generated/source/buildConfig/debug/com/tradle/react/BuildConfig.java
 new file mode 100644
-index 0000000..8602bda
+index 0000000..9f9e2a7
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/generated/source/buildConfig/debug/com/peel/react/BuildConfig.java
++++ b/node_modules/react-native-udp/android/build/generated/source/buildConfig/debug/com/tradle/react/BuildConfig.java
 @@ -0,0 +1,10 @@
 +/**
 + * Automatically generated file. DO NOT MODIFY
 + */
-+package com.peel.react;
++package com.tradle.react;
 +
 +public final class BuildConfig {
 +  public static final boolean DEBUG = Boolean.parseBoolean("true");
-+  public static final String LIBRARY_PACKAGE_NAME = "com.peel.react";
++  public static final String LIBRARY_PACKAGE_NAME = "com.tradle.react";
 +  public static final String BUILD_TYPE = "debug";
 +}
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml b/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml
+diff --git a/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml b/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml
 new file mode 100644
-index 0000000..68a94ae
+index 0000000..e90633d
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml
-@@ -0,0 +1,11 @@
++++ b/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/AndroidManifest.xml
+@@ -0,0 +1,14 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-+    package="com.peel.react" >
++    package="com.tradle.react" >
 +
 +    <uses-sdk
 +        android:minSdkVersion="21"
 +        android:targetSdkVersion="31" />
 +
 +    <uses-permission android:name="android.permission.INTERNET" />
++    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
++    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 +
 +</manifest>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json b/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json
+diff --git a/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json b/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json
 new file mode 100644
-index 0000000..824c932
+index 0000000..d1465ed
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json
++++ b/node_modules/react-native-udp/android/build/intermediates/aapt_friendly_merged_manifests/debug/aapt/output-metadata.json
 @@ -0,0 +1,18 @@
 +{
 +  "version": 3,
@@ -99,7 +58,7 @@ index 0000000..824c932
 +    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
 +    "kind": "Directory"
 +  },
-+  "applicationId": "com.peel.react",
++  "applicationId": "com.tradle.react",
 +  "variantName": "debug",
 +  "elements": [
 +    {
@@ -112,36 +71,36 @@ index 0000000..824c932
 +  "elementType": "File"
 +}
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties b/node_modules/react-native-tcp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties
+diff --git a/node_modules/react-native-udp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties b/node_modules/react-native-udp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties
 new file mode 100644
 index 0000000..d8f70c0
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties
++++ b/node_modules/react-native-udp/android/build/intermediates/aar_metadata/debug/aar-metadata.properties
 @@ -0,0 +1,3 @@
 +aarFormatVersion=1.0
 +aarMetadataVersion=1.0
 +minCompileSdk=1
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json b/node_modules/react-native-tcp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json
+diff --git a/node_modules/react-native-udp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json b/node_modules/react-native-udp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json
 new file mode 100644
 index 0000000..9e26dfe
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json
++++ b/node_modules/react-native-udp/android/build/intermediates/annotation_processor_list/debug/annotationProcessors.json
 @@ -0,0 +1 @@
 +{}
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar b/node_modules/react-native-tcp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar
+diff --git a/node_modules/react-native-udp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar b/node_modules/react-native-udp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar
 new file mode 100644
-index 0000000..7638228
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/compile_r_class_jar/debug/R.jar b/node_modules/react-native-tcp/android/build/intermediates/compile_r_class_jar/debug/R.jar
+index 0000000..4b9c6f8
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/compile_library_classes_jar/debug/classes.jar differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/compile_r_class_jar/debug/R.jar b/node_modules/react-native-udp/android/build/intermediates/compile_r_class_jar/debug/R.jar
 new file mode 100644
-index 0000000..97c33af
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/compile_r_class_jar/debug/R.jar differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/compile_symbol_list/debug/R.txt b/node_modules/react-native-tcp/android/build/intermediates/compile_symbol_list/debug/R.txt
+index 0000000..76191a0
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/compile_r_class_jar/debug/R.jar differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/compile_symbol_list/debug/R.txt b/node_modules/react-native-udp/android/build/intermediates/compile_symbol_list/debug/R.txt
 new file mode 100644
 index 0000000..e7814ce
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/compile_symbol_list/debug/R.txt
++++ b/node_modules/react-native-udp/android/build/intermediates/compile_symbol_list/debug/R.txt
 @@ -0,0 +1,1860 @@
 +int anim abc_fade_in 0x0
 +int anim abc_fade_out 0x0
@@ -2003,169 +1962,197 @@ index 0000000..e7814ce
 +int styleable ViewStubCompat_android_inflatedId 1
 +int styleable ViewStubCompat_android_layout 2
 +int xml rn_dev_preferences 0x0
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+diff --git a/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
 new file mode 100644
-index 0000000..73b43d9
+index 0000000..f4fe219
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
++++ b/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
 @@ -0,0 +1,2 @@
 +<?xml version="1.0" encoding="utf-8"?>
-+<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/debug/jniLibs"/></dataSet></merger>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/debug/jniLibs"/></dataSet></merger>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+diff --git a/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
 new file mode 100644
-index 0000000..8eff751
+index 0000000..630958b
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
++++ b/node_modules/react-native-udp/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
 @@ -0,0 +1,2 @@
 +<?xml version="1.0" encoding="utf-8"?>
-+<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/debug/shaders"/></dataSet></merger>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/debug/shaders"/></dataSet></merger>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugAssets/merger.xml b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugAssets/merger.xml
+diff --git a/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugAssets/merger.xml b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugAssets/merger.xml
 new file mode 100644
-index 0000000..cb8e3f8
+index 0000000..adf26f0
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugAssets/merger.xml
++++ b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugAssets/merger.xml
 @@ -0,0 +1,2 @@
 +<?xml version="1.0" encoding="utf-8"?>
-+<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/assets"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/build/intermediates/shader_assets/debug/out"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/debug/assets"/></dataSet></merger>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/assets"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/build/intermediates/shader_assets/debug/out"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/debug/assets"/></dataSet></merger>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties
+diff --git a/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties
 new file mode 100644
-index 0000000..9aa81ac
+index 0000000..a175080
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties
++++ b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/compile-file-map.properties
 @@ -0,0 +1 @@
-+#Tue Jun 07 08:49:40 EEST 2022
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/merger.xml b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/merger.xml
++#Sun Jun 05 05:51:00 EEST 2022
+diff --git a/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/merger.xml b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/merger.xml
 new file mode 100644
-index 0000000..ace8441
+index 0000000..c678cf8
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/incremental/packageDebugResources/merger.xml
++++ b/node_modules/react-native-udp/android/build/intermediates/incremental/packageDebugResources/merger.xml
 @@ -0,0 +1,2 @@
 +<?xml version="1.0" encoding="utf-8"?>
-+<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/res"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/build/generated/res/rs/debug"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/res"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/build/generated/res/rs/debug"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/debug/res"/></dataSet><mergedItems/></merger>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/res"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/build/generated/res/rs/debug"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/res"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/build/generated/res/rs/debug"/><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/build/generated/res/resValues/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/debug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/debug/res"/></dataSet><mergedItems/></merger>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/BuildConfig.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/BuildConfig.class
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/BuildConfig.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/BuildConfig.class
 new file mode 100644
-index 0000000..9f7d4ee
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/BuildConfig.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketListener.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketListener.class
+index 0000000..19003a8
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/BuildConfig.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpErrorUtil.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpErrorUtil.class
 new file mode 100644
-index 0000000..4ddcbb8
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketListener.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$1.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$1.class
+index 0000000..384c22e
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpErrorUtil.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask$OnDataReceivedListener.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask$OnDataReceivedListener.class
 new file mode 100644
-index 0000000..e9d0f54
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$1.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$2.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$2.class
+index 0000000..5f1a3ae
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask$OnDataReceivedListener.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask.class
 new file mode 100644
-index 0000000..5f756dc
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$2.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$3.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$3.class
+index 0000000..6bb8fdc
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpReceiverTask.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask$OnDataSentListener.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask$OnDataSentListener.class
 new file mode 100644
-index 0000000..14bc659
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$3.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$4.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$4.class
+index 0000000..20aa251
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask$OnDataSentListener.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask.class
 new file mode 100644
-index 0000000..cb8cd21
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$4.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$5.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$5.class
+index 0000000..40bab64
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSenderTask.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnDataReceivedListener.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnDataReceivedListener.class
 new file mode 100644
-index 0000000..c226565
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager$5.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager.class
+index 0000000..a1dc23f
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnDataReceivedListener.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnRuntimeExceptionListener.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnRuntimeExceptionListener.class
 new file mode 100644
-index 0000000..2b134be
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketManager.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$1.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$1.class
+index 0000000..6517cc7
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient$OnRuntimeExceptionListener.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient.class
 new file mode 100644
-index 0000000..0f9dbf1
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$1.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$2.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$2.class
+index 0000000..20e472a
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketClient.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$1.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$1.class
 new file mode 100644
-index 0000000..0f8c182
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$2.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$3.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$3.class
+index 0000000..b6acbae
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$1.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$2.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$2.class
 new file mode 100644
-index 0000000..45105b0
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$3.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$4.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$4.class
+index 0000000..5ba9170
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$2.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$3.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$3.class
 new file mode 100644
-index 0000000..fb0086f
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$4.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$5.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$5.class
+index 0000000..e18c07b
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$3.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$4.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$4.class
 new file mode 100644
-index 0000000..194dcdb
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets$5.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets.class
+index 0000000..659bf71
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$4.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$5.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$5.class
 new file mode 100644
-index 0000000..99db7d2
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSockets.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketsModule.class b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketsModule.class
+index 0000000..30ca6da
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$5.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$6.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$6.class
 new file mode 100644
-index 0000000..21e4b33
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/javac/debug/classes/com/peel/react/TcpSocketsModule.class differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt b/node_modules/react-native-tcp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt
+index 0000000..87f81f0
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$6.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$7.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$7.class
+new file mode 100644
+index 0000000..e8c98f5
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$7.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$8.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$8.class
+new file mode 100644
+index 0000000..2ff08f5
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets$8.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets.class
+new file mode 100644
+index 0000000..b09c622
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSockets.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketsModule.class b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketsModule.class
+new file mode 100644
+index 0000000..270ba87
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/javac/debug/classes/com/tradle/react/UdpSocketsModule.class differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt b/node_modules/react-native-udp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt
 new file mode 100644
 index 0000000..78ac5b8
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt
++++ b/node_modules/react-native-udp/android/build/intermediates/local_only_symbol_list/debug/R-def.txt
 @@ -0,0 +1,2 @@
 +R_DEF: Internal format may change without notice
 +local
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt b/node_modules/react-native-tcp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt
+diff --git a/node_modules/react-native-udp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt b/node_modules/react-native-udp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt
 new file mode 100644
-index 0000000..d6bb1c2
+index 0000000..b6ff5b0
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt
-@@ -0,0 +1,15 @@
++++ b/node_modules/react-native-udp/android/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,24 @@
 +1<?xml version="1.0" encoding="utf-8"?>
 +2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-+3    package="com.peel.react" >
++3    package="com.tradle.react" >
 +4
 +5    <uses-sdk
 +6        android:minSdkVersion="21"
-+6-->/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++6-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
 +7        android:targetSdkVersion="31" />
-+7-->/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++7-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
 +8
 +9    <uses-permission android:name="android.permission.INTERNET" />
-+9-->/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:4:5-66
-+9-->/home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:4:22-64
-+10
-+11</manifest>
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml b/node_modules/react-native-tcp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml
++9-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:4:5-66
++9-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:4:22-64
++10    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++10-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:5:5-78
++10-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:5:22-76
++11    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
++11-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:6:5-75
++11-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:6:22-73
++12    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
++12-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:7:5-85
++12-->/home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:7:22-83
++13
++14</manifest>
+diff --git a/node_modules/react-native-udp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml b/node_modules/react-native-udp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml
 new file mode 100644
-index 0000000..68a94ae
+index 0000000..e90633d
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml
-@@ -0,0 +1,11 @@
++++ b/node_modules/react-native-udp/android/build/intermediates/merged_manifest/debug/AndroidManifest.xml
+@@ -0,0 +1,14 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-+    package="com.peel.react" >
++    package="com.tradle.react" >
 +
 +    <uses-sdk
 +        android:minSdkVersion="21"
 +        android:targetSdkVersion="31" />
 +
 +    <uses-permission android:name="android.permission.INTERNET" />
++    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
++    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
++    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 +
 +</manifest>
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/navigation_json/debug/navigation.json b/node_modules/react-native-tcp/android/build/intermediates/navigation_json/debug/navigation.json
+diff --git a/node_modules/react-native-udp/android/build/intermediates/navigation_json/debug/navigation.json b/node_modules/react-native-udp/android/build/intermediates/navigation_json/debug/navigation.json
 new file mode 100644
 index 0000000..0637a08
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/navigation_json/debug/navigation.json
++++ b/node_modules/react-native-udp/android/build/intermediates/navigation_json/debug/navigation.json
 @@ -0,0 +1 @@
 +[]
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/packaged_manifests/debug/output-metadata.json b/node_modules/react-native-tcp/android/build/intermediates/packaged_manifests/debug/output-metadata.json
+diff --git a/node_modules/react-native-udp/android/build/intermediates/packaged_manifests/debug/output-metadata.json b/node_modules/react-native-udp/android/build/intermediates/packaged_manifests/debug/output-metadata.json
 new file mode 100644
-index 0000000..3e6b4ff
+index 0000000..67a3ef6
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/packaged_manifests/debug/output-metadata.json
++++ b/node_modules/react-native-udp/android/build/intermediates/packaged_manifests/debug/output-metadata.json
 @@ -0,0 +1,18 @@
 +{
 +  "version": 3,
@@ -2173,7 +2160,7 @@ index 0000000..3e6b4ff
 +    "type": "PACKAGED_MANIFESTS",
 +    "kind": "Directory"
 +  },
-+  "applicationId": "com.peel.react",
++  "applicationId": "com.tradle.react",
 +  "variantName": "debug",
 +  "elements": [
 +    {
@@ -2186,17 +2173,17 @@ index 0000000..3e6b4ff
 +  "elementType": "File"
 +}
 \ No newline at end of file
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar b/node_modules/react-native-tcp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar
+diff --git a/node_modules/react-native-udp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar b/node_modules/react-native-udp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar
 new file mode 100644
-index 0000000..ade1278
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar differ
-diff --git a/node_modules/react-native-tcp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt b/node_modules/react-native-tcp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt
+index 0000000..64298ec
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/intermediates/runtime_library_classes_jar/debug/classes.jar differ
+diff --git a/node_modules/react-native-udp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt b/node_modules/react-native-udp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt
 new file mode 100644
-index 0000000..28494a0
+index 0000000..88eec2f
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt
++++ b/node_modules/react-native-udp/android/build/intermediates/symbol_list_with_package_name/debug/package-aware-r.txt
 @@ -0,0 +1,1380 @@
-+com.peel.react
++com.tradle.react
 +anim abc_fade_in
 +anim abc_fade_out
 +anim abc_grow_fade_in_from_bottom
@@ -3576,42 +3563,67 @@ index 0000000..28494a0
 +styleable ViewBackgroundHelper android_background backgroundTint backgroundTintMode
 +styleable ViewStubCompat android_id android_inflatedId android_layout
 +xml rn_dev_preferences
-diff --git a/node_modules/react-native-tcp/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-tcp/android/build/outputs/logs/manifest-merger-debug-report.txt
+diff --git a/node_modules/react-native-udp/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/react-native-udp/android/build/outputs/logs/manifest-merger-debug-report.txt
 new file mode 100644
-index 0000000..d2509f3
+index 0000000..8fd6929
 --- /dev/null
-+++ b/node_modules/react-native-tcp/android/build/outputs/logs/manifest-merger-debug-report.txt
-@@ -0,0 +1,29 @@
++++ b/node_modules/react-native-udp/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,41 @@
 +-- Merging decision tree log ---
 +manifest
-+ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:2:1-5:12
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:2:1-5:12
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:2:1-5:12
++ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:2:1-8:12
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:2:1-8:12
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:2:1-8:12
 +	package
-+		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:3:5-29
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:3:5-31
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
 +	xmlns:android
-+		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:2:11-69
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:2:11-69
 +uses-permission#android.permission.INTERNET
-+ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:4:5-66
++ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:4:5-66
 +	android:name
-+		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml:4:22-64
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:4:22-64
++uses-permission#android.permission.ACCESS_NETWORK_STATE
++ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:5:5-78
++	android:name
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:5:22-76
++uses-permission#android.permission.ACCESS_WIFI_STATE
++ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:6:5-75
++	android:name
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:6:22-73
++uses-permission#android.permission.CHANGE_WIFI_MULTICAST_STATE
++ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:7:5-85
++	android:name
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml:7:22-83
 +uses-sdk
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
 +	android:targetSdkVersion
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
 +	android:minSdkVersion
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-+		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-tcp/android/src/main/AndroidManifest.xml
-diff --git a/node_modules/react-native-tcp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-tcp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++		ADDED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
++		INJECTED from /home/ozymandias/Projects/void/node_modules/react-native-udp/android/src/main/AndroidManifest.xml
+diff --git a/node_modules/react-native-udp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/react-native-udp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
 new file mode 100644
-index 0000000..6e4e3af
-Binary files /dev/null and b/node_modules/react-native-tcp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+index 0000000..49905b9
+Binary files /dev/null and b/node_modules/react-native-udp/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+diff --git a/node_modules/react-native-udp/src/UdpSocket.js b/node_modules/react-native-udp/src/UdpSocket.js
+index 4f65986..bf59742 100644
+--- a/node_modules/react-native-udp/src/UdpSocket.js
++++ b/node_modules/react-native-udp/src/UdpSocket.js
+@@ -57,7 +57,7 @@ export default class UdpSocket extends EventEmitter {
+       /** @type {string[]} */
+       const args = [].slice.call(arguments)
+       args.unshift(`socket-${this._id}`)
+-      console.log(...args)
++      // console.log(...args)
+     }
+   }
+ 

@@ -37,7 +37,7 @@
 		"@types/react-native": "^0.67.6",
 		"nanoid": "^3.3.2",
 		"react": "17.0.2",
-		"react-native": "0.68.1",
+		"react-native": "0.68.2",
 		"tape": "^5.5.2"
 	},
 	"peerDependencies": {
