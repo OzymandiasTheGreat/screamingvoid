@@ -141,7 +141,6 @@ export class VoidPeer extends EventEmitter2 {
 					value: Buffer;
 				}) => {
 					if (type === "put") {
-						console.log(key.slice(0, 1).toString());
 						if (
 							Buffer.compare(key, requestPrefix) > 0 &&
 							Buffer.compare(key, requestSuffix) <= 0
@@ -199,7 +198,6 @@ export class VoidPeer extends EventEmitter2 {
 									if (!convo.peers[peer.peerId]) {
 										convo.peers[peer.peerId] = input;
 										await host.convoStore.put(id, convo);
-										console.log("INPUT GOT", convo);
 										peer.emit(["conversation", "input"], {
 											id,
 											publicKey: peer.publicKey,

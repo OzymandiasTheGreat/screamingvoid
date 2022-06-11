@@ -295,11 +295,6 @@ export class VoidIdentity extends EventEmitter2 {
 					await this.convoStore.put(id, convo);
 					this.renameConversation(id, name);
 					const participants = await Promise.all(peerPromises);
-					console.log({
-						id: id.toString("hex"),
-						name,
-						peers: participants.map((p) => p.name || p.publicKey),
-					});
 					this.emit(["conversation", "request"], {
 						id,
 						name,
