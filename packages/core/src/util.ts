@@ -1,4 +1,6 @@
 import { Buffer } from "buffer";
+import fs from "fs/promises";
+import mimetypes from "mime-types";
 import sodium from "sodium-universal";
 import { CONVO_ID_LEN, CONVO_INPUT, CONVO_REQUEST } from "./constants";
 import { DecryptionError, InvalidLength, NotConvoKey } from "./errors";
@@ -18,13 +20,23 @@ export class Defered<T> {
 	}
 }
 
-export function uriToImage(uri: string): Buffer {
+export async function uriToImage(uri: string): Promise<Buffer> {
 	if (!uri) {
 		return Buffer.alloc(0);
 	}
-	const mimetype = uri.slice(5, uri.indexOf(";"));
-	const base64 = uri.slice(uri.indexOf(","));
-	const data = Buffer.from(base64, "base64");
+	let mimetype: string;
+	let data: Buffer;
+	if (uri.startsWith("data:")) {
+		mimetype = uri.slice(5, uri.indexOf(";"));
+		const base64 = uri.slice(uri.indexOf(","));
+		data = Buffer.from(base64, "base64");
+	} else {
+		mimetype = mimetypes.lookup(uri) as string;
+		if (!mimetype) {
+			return Buffer.alloc(0);
+		}
+		data = await fs.readFile(uri);
+	}
 	return Image.encode({ mimetype, data });
 }
 

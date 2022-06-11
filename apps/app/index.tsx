@@ -7,22 +7,28 @@ import notifee, {
 import { VoidInterface } from "./src/interface";
 import App from "./App";
 
-let emitter = new VoidInterface();
+notifee.createChannel({
+	id: "service",
+	name: "Network Background Service",
+	description: "Persistent notification indicating network status",
+	importance: AndroidImportance.NONE,
+	visibility: AndroidVisibility.PUBLIC,
+});
+notifee.createChannel({
+	id: "chat",
+	name: "Chat",
+	description: "Conversation request and new message notifications",
+	importance: AndroidImportance.HIGH,
+	visibility: AndroidVisibility.PRIVATE,
+});
 
+let emitter = new VoidInterface();
 notifee.registerForegroundService(
 	(notification) =>
 		new Promise(async (remove) => {
 			emitter.listen();
 		})
 );
-
-notifee.createChannel({
-	id: "service",
-	name: "Void Network Service",
-	importance: AndroidImportance.NONE,
-	visibility: AndroidVisibility.PUBLIC,
-});
-
 notifee.displayNotification({
 	id: "service",
 	body: "Void is running",

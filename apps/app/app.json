@@ -3,6 +3,7 @@
     "name": "Void",
     "slug": "Void",
     "version": "1.0.0",
+    "scheme": "screamingvoid",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,9 +15,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "me.screamingvoid.app"

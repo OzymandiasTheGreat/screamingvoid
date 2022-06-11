@@ -115,7 +115,7 @@ export class VoidIdentity extends EventEmitter2 {
 		listener: (data: {
 			id: Buffer;
 			name: string;
-			peers: { publicKey: string; name?: string; bio?: string };
+			peers: { publicKey: string; name?: string; bio?: string }[];
 		}) => void,
 	): Listener;
 	on(
@@ -370,7 +370,7 @@ export class VoidIdentity extends EventEmitter2 {
 		await id.feed.ready();
 		await id.feed.put(VOID_PEER_NAME, Buffer.from(name));
 		await id.feed.put(VOID_PEER_BIO, Buffer.from(bio));
-		await id.feed.put(VOID_PEER_AVATAR, uriToImage(avatar));
+		await id.feed.put(VOID_PEER_AVATAR, await uriToImage(avatar));
 		await id.feed.put(
 			VOID_VERSION,
 			VersionTag.encode({
@@ -593,5 +593,111 @@ export class VoidIdentity extends EventEmitter2 {
 			} as ConversationMeta);
 			this.emit(["conversation", "rename"], { id, name });
 		}
+	}
+
+	async conversationRequests(): Promise<
+		{
+			id: string;
+			name: string;
+			peers: { id: string; name?: string; bio?: string }[];
+		}[]
+	> {
+		const convos: {
+			id: string;
+			name: string;
+			peers: { id: string; name?: string; bio?: string }[];
+		}[] = [];
+		for await (let [key, req] of this.convoStore.iterator() as any) {
+			const meta = await this.convoMeta.get(key).catch(() => null);
+			if (!meta) {
+				const peers: { id: string; name?: string; bio?: string }[] =
+					[];
+				for (let peer of Object.keys(req.peers)) {
+					const p = await this.lookup(
+						Buffer.from(peer, "hex"),
+					).catch(() => null);
+					peers.push({
+						id: p?.publicKey || peer,
+						name: p?.name,
+						bio: p?.bio,
+					});
+				}
+				convos.push({
+					id: key.toString("hex"),
+					name:
+						peers.length > 1
+							? req.name
+							: peers[0].name || peers[0].id,
+					peers,
+				});
+			}
+		}
+		return convos;
+	}
+
+	async conversationsList(): Promise<
+		{
+			id: string;
+			name: string;
+			peers: { id: string; name?: string }[];
+			last?: {
+				id: string;
+				sender: { id: string; name?: string };
+				timestamp: number;
+				body: string;
+			};
+		}[]
+	> {
+		const ret: {
+			id: string;
+			name: string;
+			peers: { id: string; name?: string }[];
+			last?: {
+				id: string;
+				sender: { id: string; name?: string };
+				timestamp: number;
+				body: string;
+			};
+		}[] = [];
+		for (let convo of this.conversations.values()) {
+			const id = convo.id.toString("hex");
+			const name = convo.name;
+			const peers = (
+				await Promise.all(
+					Object.keys(convo.peers).map((p) =>
+						this.lookup(Buffer.from(p, "hex")).catch(() => ({
+							publicKey: p,
+							name: undefined,
+						})),
+					),
+				)
+			).map((p) => ({ id: p.publicKey, name: p.name }));
+			const msg = await convo.latest(undefined, 1);
+			let last:
+				| {
+						id: string;
+						sender: { id: string; name?: string };
+						timestamp: number;
+						body: string;
+				  }
+				| undefined;
+			if (msg.length) {
+				const sender = await this.lookup(msg[0].sender).catch(() => ({
+					publicKey: msg[0].sender.toString("hex"),
+					name: undefined,
+				}));
+				last = {
+					id: msg[0].id.toString("hex"),
+					timestamp: msg[0].timestamp,
+					sender: {
+						id: sender.publicKey,
+						name: sender.name,
+					},
+					body: msg[0].body,
+				};
+			}
+			ret.push({ id, name, peers, last });
+		}
+		return ret;
 	}
 }

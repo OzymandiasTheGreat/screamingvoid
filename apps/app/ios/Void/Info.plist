@@ -25,6 +25,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
+          <string>screamingvoid</string>
           <string>me.screamingvoid.app</string>
         </array>
       </dict>

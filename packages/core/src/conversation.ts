@@ -26,11 +26,11 @@ export class VoidConversation extends EventEmitter2 {
 	id: Buffer;
 	name: string;
 	archived: boolean;
+	peers!: Record<string, ConversationPeer>;
 
 	private host: VoidIdentity;
 	private base!: Autobase;
 	private live!: Readable;
-	private peers!: Record<string, ConversationPeer>;
 	private localInput: Hypercore;
 	private localOutput: Hypercore;
 	private localStorage: HyperBee;
@@ -107,7 +107,7 @@ export class VoidConversation extends EventEmitter2 {
 								continue;
 							}
 							const timestamp = Buffer.allocUnsafe(8);
-							timestamp.writeBigUint64BE(BigInt(op.timestamp));
+							timestamp.writeBigUInt64BE(BigInt(op.timestamp));
 							const key = Buffer.concat([timestamp, sig]);
 							const message: ChatMessage = {} as any;
 							let target: ChatMessage | null;
@@ -197,7 +197,7 @@ export class VoidConversation extends EventEmitter2 {
 					if (sodium.crypto_sign_verify_detached(sig, msg, sender)) {
 						const op = ChatInput.decode(msg);
 						const timestamp = Buffer.allocUnsafe(8);
-						timestamp.writeBigUint64BE(BigInt(op.timestamp));
+						timestamp.writeBigUInt64BE(BigInt(op.timestamp));
 						const id = Buffer.concat([timestamp, sig]);
 						let replyTo = null;
 						switch (op.type) {
@@ -265,7 +265,7 @@ export class VoidConversation extends EventEmitter2 {
 		const target = message.target || null;
 		const attachments = message.attachments || [];
 		const timeBuf = Buffer.allocUnsafe(8);
-		timeBuf.writeBigUint64BE(BigInt(timestamp));
+		timeBuf.writeBigUInt64BE(BigInt(timestamp));
 		for (let attachment of attachments) {
 			let i = BigInt(0);
 			try {
@@ -276,7 +276,7 @@ export class VoidConversation extends EventEmitter2 {
 				sodium.crypto_generichash_init(inst, null, 64);
 				for await (let chunk of fs.createReadStream(attachment)) {
 					const no = Buffer.allocUnsafe(8);
-					no.writeBigUint64BE(i);
+					no.writeBigUInt64BE(i);
 					const key = Buffer.concat([
 						timeBuf,
 						Buffer.from(path.basename(attachment)),
@@ -351,7 +351,7 @@ export class VoidConversation extends EventEmitter2 {
 
 	async latest(last?: number, limit = 20): Promise<ChatMessage[]> {
 		const timestamp = Buffer.allocUnsafe(8);
-		timestamp.writeBigUint64BE(BigInt(last || Date.now()));
+		timestamp.writeBigUInt64BE(BigInt(last || Date.now()));
 		const suffix = Buffer.allocUnsafe(sodium.crypto_sign_BYTES).fill(0xff);
 		const prefix = Buffer.concat([timestamp, suffix]);
 		const stream = this.feed.createReadStream({
@@ -380,7 +380,7 @@ export class VoidConversation extends EventEmitter2 {
 				msg.sender.toString("hex"),
 			);
 			const timestamp = Buffer.allocUnsafe(8);
-			timestamp.writeBigUint64BE(BigInt(msg.timestamp));
+			timestamp.writeBigUInt64BE(BigInt(msg.timestamp));
 			const filename = path.join(
 				root,
 				`${timestamp.toString("hex")}-${attachment}`,

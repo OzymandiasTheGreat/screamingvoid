@@ -10,10 +10,9 @@ import {
 	Button,
 	Dialog,
 	FAB,
+	List,
 	Portal,
-	Subheading,
 	TextInput,
-	Title,
 } from "react-native-paper";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import * as ImagePicker from "expo-image-picker";
@@ -75,14 +74,11 @@ export const Login: React.FC<{ prefs?: LevelUp }> = ({ prefs }) => {
 	const createIdentity = () => {
 		const pk = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES);
 		const sk = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
-		const enc = Buffer.alloc(32);
 		sodium.crypto_sign_keypair(pk, sk);
-		sodium.randombytes_buf(enc);
 		const id: SavedIdentity = {
 			displayName: name,
 			publicKey: pk.toString("hex"),
 			secretKey: sk.toString("hex"),
-			encryptionKey: enc.toString("hex"),
 		};
 		iddb?.put(id.publicKey, {
 			displayName: id.displayName,
@@ -124,34 +120,18 @@ export const Login: React.FC<{ prefs?: LevelUp }> = ({ prefs }) => {
 	};
 
 	const renderIdentity = ({ item }: { item: SavedIdentity }) => (
-		<TouchableNativeFeedback
+		<List.Item
 			onPress={() => onIdentityPress(item.publicKey)}
-		>
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					paddingVertical: 10,
-					paddingHorizontal: 15,
-				}}
-			>
+			title={item.displayName}
+			description={item.publicKey}
+			left={(props) => (
 				<Image
 					source={{ uri: emitter.getAvatar(item.publicKey) }}
-					style={{
-						width: 48,
-						height: 48,
-						borderRadius: 24,
-					}}
+					{...props}
+					style={{ width: 48, height: 48, borderRadius: 24 }}
 				/>
-				<View style={{ marginLeft: 15 }}>
-					<Title>{item.displayName}</Title>
-					<Subheading ellipsizeMode="middle" numberOfLines={1}>
-						{item.publicKey}
-					</Subheading>
-				</View>
-			</View>
-		</TouchableNativeFeedback>
+			)}
+		/>
 	);
 
 	return (
