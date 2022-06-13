@@ -29,6 +29,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "@notifee/react-native",
+      "react-native-v8",
+      "expo-build-properties"
+    ]
   }
 }

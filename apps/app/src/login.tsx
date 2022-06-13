@@ -21,9 +21,10 @@ import sodium from "sodium-universal";
 import type { LevelUp } from "levelup";
 import sublevel from "subleveldown";
 import type { SavedIdentity } from "./interface";
-import { VoidContext } from "./context";
+import { PrefsContext, VoidContext } from "./context";
 
-export const Login: React.FC<{ prefs?: LevelUp }> = ({ prefs }) => {
+export const Login: React.FC = () => {
+	const prefs = useContext(PrefsContext);
 	const emitter = useContext(VoidContext);
 	const [iddb, setIdDB] = useState<LevelUp>();
 	const [identities, setIdentities] = useState<SavedIdentity[]>([]);

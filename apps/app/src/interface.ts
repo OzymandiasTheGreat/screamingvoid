@@ -135,8 +135,16 @@ export class VoidInterface extends EventEmitter2 {
 		event: ["conversation", "message"],
 		listener: (data: {
 			conversation: string;
-			message: ChatMessage;
-			replyTo: string;
+			message: {
+				id: string;
+				sender: { id: string; name?: string };
+				timestamp: number;
+				body: string;
+				reaction: { type: number; sender: string }[];
+				target?: string;
+				attachments: string[];
+			};
+			replyTo?: string;
 		}) => void
 	): Listener;
 	on(
@@ -194,7 +202,7 @@ export class VoidInterface extends EventEmitter2 {
 			conversation: string;
 			message: {
 				id: string;
-				sender: string;
+				sender: { id: string; name?: string };
 				timestamp: number;
 				body: string;
 				reaction: { type: number; sender: string }[];
@@ -280,12 +288,17 @@ export class VoidInterface extends EventEmitter2 {
 		);
 		this.core?.on(
 			["conversation", "message"],
-			({ conversation, message, replyTo }) =>
+			async ({ conversation, message, replyTo }) => {
+				const sender: { id: string; name?: string } = (await this.core
+					?.lookup(message.sender)
+					.catch(() => ({
+						id: message.sender.toString("hex"),
+					}))) as any;
 				this.emitInternal(["conversation", "message"], {
 					conversation: conversation.toString("hex"),
 					message: {
 						id: message.id.toString("hex"),
-						sender: message.sender.toString("hex"),
+						sender: sender,
 						timestamp: message.timestamp,
 						target: message.target,
 						body: message.body,
@@ -295,8 +308,9 @@ export class VoidInterface extends EventEmitter2 {
 						})),
 						attachments: message.attachments,
 					},
-					replyTo: message.replyTo?.toString("hex"),
-				})
+					replyTo: replyTo?.toString("hex"),
+				});
+			}
 		);
 		this.core?.on(["conversation", "remove"], ({ conversation, message }) =>
 			this.emitInternal(["conversation", "remove"], {

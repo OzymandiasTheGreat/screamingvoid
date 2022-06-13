@@ -659,12 +659,14 @@ export class VoidIdentity extends EventEmitter2 {
 			const name = convo.name;
 			const peers = (
 				await Promise.all(
-					Object.keys(convo.peers).map((p) =>
-						this.lookup(Buffer.from(p, "hex")).catch(() => ({
-							publicKey: p,
-							name: undefined,
-						})),
-					),
+					Object.keys(convo.peers)
+						.filter((p) => p !== this.id)
+						.map((p) =>
+							this.lookup(Buffer.from(p, "hex")).catch(() => ({
+								publicKey: p,
+								name: undefined,
+							})),
+						),
 				)
 			).map((p) => ({ id: p.publicKey, name: p.name }));
 			const msg = await convo.latest(undefined, 1);

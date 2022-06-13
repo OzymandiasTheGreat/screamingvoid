@@ -5,10 +5,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start:web",
-    "sidecar": "yarn --cwd src-node build && yarn --cwd src-node caxa && node scripts/move-binary.js"
+    "sidecar": "yarn --cwd src-node build && yarn --cwd src-node caxa && node scripts/move-binary.js",
+    "start": "expo start --dev-client"
   },
   "dependencies": {
-    "@notifee/react-native": "^5.2.1",
+    "@notifee/react-native": "^5.3.0",
     "@react-navigation/material-bottom-tabs": "^6.2.1",
     "@react-navigation/native": "^6.0.10",
     "@react-navigation/native-stack": "^6.6.2",
@@ -24,6 +25,7 @@
     "buffer": "^6.0.3",
     "eventemitter2": "^6.4.5",
     "expo": "~45.0.0",
+    "expo-build-properties": "~0.2.0",
     "expo-image-picker": "~13.1.1",
     "expo-linking": "~3.1.0",
     "expo-secure-store": "~11.2.0",
@@ -45,12 +47,14 @@
     "react-native-screens": "~3.11.1",
     "react-native-tcp": "^4.0.0",
     "react-native-udp": "^4.1.5",
+    "react-native-v8": "^1.4.1",
     "react-native-web": "0.17.7",
     "sodium-universal": "^3.1.0",
     "stream-browserify": "^3.0.0",
     "subleveldown": "^6.0.1",
     "tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#dev",
-    "util": "^0.12.4"
+    "util": "^0.12.4",
+    "v8-android-jit-nointl": "^10.100.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",

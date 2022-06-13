@@ -15,7 +15,7 @@ import path from "path";
 import levelup from "levelup";
 import leveldown from "leveldown";
 import { VoidInterface } from "./src/interface";
-import { VoidContext } from "./src/context";
+import { PrefsContext, VoidContext } from "./src/context";
 import { Login } from "./src/login";
 import { Home } from "./src/home/home";
 import { ChatRequests } from "./src/chat/requests";
@@ -77,24 +77,26 @@ const App: React.FC<{ emitter: VoidInterface }> = ({ emitter }) => {
 
 	return (
 		<VoidContext.Provider value={emitter}>
-			<PaperProvider>
-				{loaded ? (
-					<NavigationContainer
-						linking={linking}
-						theme={scheme === "dark" ? DarkTheme : DefaultTheme}
-					>
-						<Stack.Navigator>
-							<Stack.Screen name="Home" component={Home} />
-							<Stack.Screen
-								name="ChatRequests"
-								component={ChatRequests}
-							/>
-						</Stack.Navigator>
-					</NavigationContainer>
-				) : (
-					<Login prefs={prefs} />
-				)}
-			</PaperProvider>
+			<PrefsContext.Provider value={prefs as any}>
+				<PaperProvider>
+					{loaded ? (
+						<NavigationContainer
+							linking={linking}
+							theme={scheme === "dark" ? DarkTheme : DefaultTheme}
+						>
+							<Stack.Navigator>
+								<Stack.Screen name="Home" component={Home} />
+								<Stack.Screen
+									name="ChatRequests"
+									component={ChatRequests}
+								/>
+							</Stack.Navigator>
+						</NavigationContainer>
+					) : (
+						<Login />
+					)}
+				</PaperProvider>
+			</PrefsContext.Provider>
 		</VoidContext.Provider>
 	);
 };
