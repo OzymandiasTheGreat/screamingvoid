@@ -30,10 +30,12 @@ import {
 import { CachedPeer } from "./proto/peer";
 import { Purpose, VersionTag } from "./proto/version";
 import { KeyPair, Peer } from "./types";
-import { Defered, hash, seal, uriToImage } from "./util";
+import { Defered, hash, imageToUri, seal, uriToImage } from "./util";
 
 export class VoidIdentity extends EventEmitter2 {
 	id: string;
+	name!: string;
+	bio!: string;
 	keyPair: KeyPair;
 	boxKeyPair: KeyPair;
 
@@ -361,6 +363,8 @@ export class VoidIdentity extends EventEmitter2 {
 		avatar: string,
 	): Promise<VoidIdentity> {
 		const id = new VoidIdentity(prefix, keyPair);
+		id.name = name;
+		id.bio = bio;
 		await id.openStorage(prefix);
 		await id.feed.ready();
 		await id.feed.put(VOID_PEER_NAME, Buffer.from(name));
@@ -385,12 +389,24 @@ export class VoidIdentity extends EventEmitter2 {
 		const id = new VoidIdentity(prefix, keyPair);
 		await id.openStorage(prefix);
 		await id.feed.ready();
+		id.name = await id.feed
+			.get(VOID_PEER_NAME)
+			.then(({ value }) => value.toString());
+		id.bio = await id.feed
+			.get(VOID_PEER_BIO)
+			.then(({ value }) => value.toString());
 		const tag = await id.feed.get(VOID_VERSION);
 		if (!tag) {
 			throw new IdentityNotFound();
 		}
 		await id.connect();
 		return id.ready.then(() => id);
+	}
+
+	get avatar(): Promise<string> {
+		return this.feed
+			.get(VOID_PEER_AVATAR)
+			.then(({ value }) => imageToUri(value as Buffer));
 	}
 
 	async lookup(publicKey: Buffer): Promise<Peer> {
@@ -679,10 +695,18 @@ export class VoidIdentity extends EventEmitter2 {
 				  }
 				| undefined;
 			if (msg.length) {
-				const sender = await this.lookup(msg[0].sender).catch(() => ({
-					publicKey: msg[0].sender.toString("hex"),
-					name: undefined,
-				}));
+				let sender;
+				if (this.keyPair.publicKey.equals(msg[0].sender)) {
+					sender = {
+						id: this.id,
+						name: this.name,
+					};
+				} else {
+					sender = await this.lookup(msg[0].sender).catch(() => ({
+						publicKey: msg[0].sender.toString("hex"),
+						name: undefined,
+					}));
+				}
 				last = {
 					id: msg[0].id.toString("hex"),
 					timestamp: msg[0].timestamp,

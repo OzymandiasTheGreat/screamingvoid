@@ -1,14 +1,20 @@
-import levelup from "levelup";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import type levelup from "levelup";
 import React, { useContext, useEffect, useState } from "react";
-import { View } from "react-native";
-import { Image } from "react-native";
-import { FlatList, SafeAreaView, Text } from "react-native";
+import { Image, FlatList, SafeAreaView, Text, View } from "react-native";
 import { List } from "react-native-paper";
 import sublevel from "subleveldown";
 import { PrefsContext, VoidContext } from "../context";
 import type { MessageList } from "../interface";
 
-export const Messages: React.FC = () => {
+dayjs.extend(relativeTime);
+
+export const Messages: React.FC<{
+	navigation: NavigationProp<any>;
+	route: RouteProp<any>;
+}> = ({ navigation }) => {
 	const emitter = useContext(VoidContext);
 	const prefs = useContext(PrefsContext);
 	const [log, setLog] = useState<levelup.LevelUp>();
@@ -27,18 +33,18 @@ export const Messages: React.FC = () => {
 		const listener1 = emitter.on(["conversation", "list"], async (data) => {
 			setConvos(data);
 			const status = [];
-			for (let msg of data) {
-				const last = await log?.get(msg.id).catch(() => null);
+			for (let convo of data) {
+				const last = await log?.get(convo.id).catch(() => null);
 				if (!last) {
 					status.push(true);
 				} else {
-					status.push(msg.id.localeCompare(last) > 0);
+					status.push((convo.last?.id.localeCompare(last) || 0) > 0);
 				}
 			}
 			setUnread(status);
 		});
 		const listener2 = emitter.on(
-			["conversation", "message"],
+			["conversation", "message", "*"],
 			async (data) => {
 				const list = [...convos];
 				const status = [...unread];
@@ -78,7 +84,7 @@ export const Messages: React.FC = () => {
 				? item.peers[0].name || item.peers[0].id
 				: item.name;
 		const desc = item.last
-			? `${item.last.sender.name}: ${item.last.body.slice(0, 64)}`
+			? `${item.last.sender.name}: ${item.last.body}`
 			: "Write something...";
 		const size = item.peers.length === 1 ? 48 : 24;
 		const left = item.peers.map((p) => ({
@@ -87,13 +93,18 @@ export const Messages: React.FC = () => {
 			height: size,
 		}));
 		const right = item.last
-			? `${new Date(item.last.timestamp).toLocaleTimeString()}`
+			? `${dayjs(item.last.timestamp).fromNow()}`
 			: "";
 		return (
 			<List.Item
 				key={item.id}
+				onPress={() =>
+					navigation.navigate("Conversation", { id: item.id })
+				}
 				titleStyle={{ fontWeight: unread[index] ? "700" : "400" }}
 				descriptionStyle={{ fontWeight: unread[index] ? "700" : "400" }}
+				descriptionNumberOfLines={1}
+				descriptionEllipsizeMode="tail"
 				title={name}
 				description={desc}
 				left={(props) => (
@@ -117,7 +128,11 @@ export const Messages: React.FC = () => {
 						))}
 					</View>
 				)}
-				right={(props) => <Text {...props}>{right}</Text>}
+				right={(props) => (
+					<Text {...props} style={{ color: "#777", width: 64 }}>
+						{right}
+					</Text>
+				)}
 			/>
 		);
 	};

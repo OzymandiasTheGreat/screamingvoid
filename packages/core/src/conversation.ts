@@ -363,7 +363,7 @@ export class VoidConversation extends EventEmitter2 {
 		for await (let { value } of stream) {
 			messages.push(value);
 		}
-		return messages.reverse();
+		return messages;
 	}
 
 	async extractAttachment(
