@@ -30,7 +30,7 @@ export const Messages: React.FC<{
 		);
 	}, []);
 	useEffect(() => {
-		const listener1 = emitter.on(["conversation", "list"], async (data) => {
+		const listener = emitter.on(["conversation", "list"], async (data) => {
 			setConvos(data);
 			const status = [];
 			for (let convo of data) {
@@ -43,7 +43,13 @@ export const Messages: React.FC<{
 			}
 			setUnread(status);
 		});
-		const listener2 = emitter.on(
+		emitter.emit(["request", "conversation", "list"]);
+		return () => {
+			listener.off();
+		};
+	}, [log]);
+	useEffect(() => {
+		const listener = emitter.on(
 			["conversation", "message", "*"],
 			async (data) => {
 				const list = [...convos];
@@ -65,10 +71,8 @@ export const Messages: React.FC<{
 				setUnread(status);
 			}
 		);
-		emitter.emit(["request", "conversation", "list"]);
 		return () => {
-			listener1.off();
-			listener2.off();
+			listener.off();
 		};
 	}, [convos, log]);
 

@@ -17,11 +17,6 @@ exports.ChatInputType = {
   REACT: 4
 }
 
-exports.ChatReactionType = {
-  NONE: 0,
-  LIKE: 1
-}
-
 var ConversationMeta = exports.ConversationMeta = {
   buffer: true,
   encodingLength: null,
@@ -426,8 +421,8 @@ function defineChatReaction () {
 
   function encodingLength (obj) {
     var length = 0
-    if (defined(obj.type)) {
-      var len = encodings.enum.encodingLength(obj.type)
+    if (defined(obj.char)) {
+      var len = encodings.string.encodingLength(obj.char)
       length += 1 + len
     }
     if (defined(obj.sender)) {
@@ -441,10 +436,10 @@ function defineChatReaction () {
     if (!offset) offset = 0
     if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
     var oldOffset = offset
-    if (defined(obj.type)) {
-      buf[offset++] = 8
-      encodings.enum.encode(obj.type, buf, offset)
-      offset += encodings.enum.encode.bytes
+    if (defined(obj.char)) {
+      buf[offset++] = 10
+      encodings.string.encode(obj.char, buf, offset)
+      offset += encodings.string.encode.bytes
     }
     if (defined(obj.sender)) {
       buf[offset++] = 18
@@ -461,7 +456,7 @@ function defineChatReaction () {
     if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
     var oldOffset = offset
     var obj = {
-      type: 0,
+      char: "",
       sender: null
     }
     while (true) {
@@ -474,8 +469,8 @@ function defineChatReaction () {
       var tag = prefix >> 3
       switch (tag) {
         case 1:
-        obj.type = encodings.enum.decode(buf, offset)
-        offset += encodings.enum.decode.bytes
+        obj.char = encodings.string.decode(buf, offset)
+        offset += encodings.string.decode.bytes
         break
         case 2:
         obj.sender = encodings.bytes.decode(buf, offset)
@@ -785,7 +780,7 @@ function defineChatInput () {
       length += 1 + len
     }
     if (defined(obj.reaction)) {
-      var len = encodings.enum.encodingLength(obj.reaction)
+      var len = encodings.string.encodingLength(obj.reaction)
       length += 1 + len
     }
     if (defined(obj.attachments)) {
@@ -835,9 +830,9 @@ function defineChatInput () {
       offset += encodings.string.encode.bytes
     }
     if (defined(obj.reaction)) {
-      buf[offset++] = 56
-      encodings.enum.encode(obj.reaction, buf, offset)
-      offset += encodings.enum.encode.bytes
+      buf[offset++] = 58
+      encodings.string.encode(obj.reaction, buf, offset)
+      offset += encodings.string.encode.bytes
     }
     if (defined(obj.attachments)) {
       for (var i = 0; i < obj.attachments.length; i++) {
@@ -863,7 +858,7 @@ function defineChatInput () {
       hashes: null,
       target: null,
       body: "",
-      reaction: 0,
+      reaction: "",
       attachments: []
     }
     while (true) {
@@ -902,8 +897,8 @@ function defineChatInput () {
         offset += encodings.string.decode.bytes
         break
         case 7:
-        obj.reaction = encodings.enum.decode(buf, offset)
-        offset += encodings.enum.decode.bytes
+        obj.reaction = encodings.string.decode(buf, offset)
+        offset += encodings.string.decode.bytes
         break
         case 8:
         obj.attachments.push(encodings.string.decode(buf, offset))

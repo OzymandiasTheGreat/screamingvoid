@@ -28,13 +28,8 @@ enum ChatInputType {
 	REACT = 4;
 }
 
-enum ChatReactionType {
-	NONE = 0;
-	LIKE = 1;
-}
-
 message ChatReaction {
-	ChatReactionType type = 1;
+	string char = 1;
 	bytes sender = 2;
 }
 
@@ -61,6 +56,6 @@ message ChatInput {
 	ChatHash hashes = 4;
 	optional bytes target = 5;
 	optional string body = 6;
-	optional ChatReactionType reaction = 7;
+	optional string reaction = 7;
 	repeated string attachments = 8;
 }

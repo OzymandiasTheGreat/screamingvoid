@@ -5,7 +5,6 @@ import path from "path";
 import RNFS from "react-native-fs";
 import notifee from "@notifee/react-native";
 import { VoidIdentity } from "@screamingvoid/core";
-import type { ChatReaction } from "@screamingvoid/core/src/proto/conversation";
 
 const AVATARS = path.join(RNFS.CachesDirectoryPath, "avatars");
 RNFS.mkdir(AVATARS);
@@ -33,7 +32,9 @@ export type ChatMessage = {
 	sender: { id: string; name?: string };
 	timestamp: number;
 	body: string;
-	reaction: { sender: { id: string; name: string }; value: string }[];
+	reaction: { sender: { id: string; name: string }; char: string }[];
+	attachments: string[];
+	target?: string;
 };
 
 export class VoidInterface extends EventEmitter2 {
@@ -107,8 +108,12 @@ export class VoidInterface extends EventEmitter2 {
 		listener: () => void
 	): Listener;
 	private onInternal(
+		event: ["request", "conversation", "remove"],
+		listener: (data: { conversation: string; message: string }) => void
+	): Listener;
+	private onInternal(
 		event: ["request", "conversation", string],
-		listener: (data: { last?: number; limit?: number }) => void
+		listener: (data: { last?: string; limit?: number }) => void
 	): Listener;
 	private onInternal(
 		event: ["request", "send"],
@@ -118,6 +123,26 @@ export class VoidInterface extends EventEmitter2 {
 			attachments?: string[];
 			target?: string;
 		}) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "react"],
+		listener: (data: {
+			convo: string;
+			message: string;
+			reaction?: string;
+		}) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "attachment"],
+		listener: (data: {
+			attachment: string;
+			message: string;
+			convo: string;
+		}) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "peer"],
+		listener: (id: string) => void
 	): Listener;
 	private onInternal(
 		event: any,
@@ -136,6 +161,10 @@ export class VoidInterface extends EventEmitter2 {
 	on(
 		event: ["peer", "error"],
 		listener: (data: { id: string; error: string }) => void
+	): Listener;
+	on(
+		event: ["peer", string],
+		listener: (data: { id: string; name: string; bio: string }) => void
 	): Listener;
 	on(
 		event: ["conversation", "rename"],
@@ -158,7 +187,10 @@ export class VoidInterface extends EventEmitter2 {
 				sender: { id: string; name?: string };
 				timestamp: number;
 				body: string;
-				reaction: { type: number; sender: string }[];
+				reaction: {
+					char: string;
+					sender: { id: string; name: string };
+				}[];
 				target?: string;
 				attachments: string[];
 			};
@@ -166,15 +198,16 @@ export class VoidInterface extends EventEmitter2 {
 		}) => void
 	): Listener;
 	on(
-		event: ["conversation", "remove"],
-		listener: (data: { conversation: string; message: string }) => void
+		event: ["conversation", "remove", string],
+		listener: (message: string) => void
 	): Listener;
 	on(
-		event: ["conversation", "react"],
+		event: ["conversation", "react", string],
 		listener: (data: {
-			conversation: string;
 			target: string;
 			replyTo: string;
+			sender: { id: string; name?: string };
+			reaction?: string;
 		}) => void
 	): Listener;
 	on(
@@ -195,6 +228,10 @@ export class VoidInterface extends EventEmitter2 {
 		event: ["conversation", string],
 		listener: (data: ChatMessage[]) => void
 	): Listener;
+	on(
+		event: ["conversation", "attachment", string],
+		listener: (attachment: string) => void
+	): Listener;
 	on(event: any, listener: (...args: any[]) => void): Listener {
 		return super.on(event, listener, { objectify: true }) as any;
 	}
@@ -205,6 +242,10 @@ export class VoidInterface extends EventEmitter2 {
 	private emitInternal(
 		event: ["peer", "error"],
 		data: { id: string; error: string }
+	): boolean;
+	private emitInternal(
+		event: ["peer", string],
+		data: { id: string; name: string; bio: string }
 	): boolean;
 	private emitInternal(
 		event: ["conversation", "rename"],
@@ -227,7 +268,10 @@ export class VoidInterface extends EventEmitter2 {
 				sender: { id: string; name?: string };
 				timestamp: number;
 				body: string;
-				reaction: { type: number; sender: string }[];
+				reaction: {
+					char: string;
+					sender: { id: string; name: string };
+				}[];
 				target?: string;
 				attachments: string[];
 			};
@@ -235,12 +279,17 @@ export class VoidInterface extends EventEmitter2 {
 		}
 	): boolean;
 	private emitInternal(
-		event: ["conversation", "remove"],
-		data: { conversation: string; message: string }
+		event: ["conversation", "remove", string],
+		message: string
 	): boolean;
 	private emitInternal(
-		event: ["conversation", "react"],
-		data: { conversation: string; target: string; replyTo: string }
+		event: ["conversation", "react", string],
+		data: {
+			target: string;
+			replyTo: string;
+			sender: { id: string; name?: string };
+			reaction?: string;
+		}
 	): boolean;
 	private emitInternal(
 		event: ["conversation", "requests"],
@@ -258,6 +307,10 @@ export class VoidInterface extends EventEmitter2 {
 		event: ["conversation", string],
 		data: ChatMessage[]
 	): boolean;
+	private emitInternal(
+		event: ["conversation", "attachment", string],
+		attachment: string
+	): boolean;
 	private emitInternal(event: string | string[], ...values: any[]): boolean {
 		return super.emit(event, ...values);
 	}
@@ -272,8 +325,12 @@ export class VoidInterface extends EventEmitter2 {
 	emit(event: ["accept", "conversation"], id: string): boolean;
 	emit(event: ["request", "conversation", "list"]): boolean;
 	emit(
+		event: ["request", "conversation", "remove"],
+		data: { conversation: string; message: string }
+	): boolean;
+	emit(
 		event: ["request", "conversation", string],
-		data: { last?: number; limit?: number }
+		data: { last?: string; limit?: number }
 	): boolean;
 	emit(
 		event: ["request", "send"],
@@ -284,6 +341,19 @@ export class VoidInterface extends EventEmitter2 {
 			target?: string;
 		}
 	): boolean;
+	emit(
+		event: ["request", "react"],
+		data: {
+			convo: string;
+			message: string;
+			reaction?: string;
+		}
+	): boolean;
+	emit(
+		event: ["request", "attachment"],
+		data: { attachment: string; message: string; convo: string }
+	): boolean;
+	emit(event: ["request", "peer"], id: string): boolean;
 	emit(event: string | string[], ...values: any[]): boolean {
 		return super.emit(event, ...values);
 	}
@@ -342,6 +412,24 @@ export class VoidInterface extends EventEmitter2 {
 							id: message.sender.toString("hex"),
 						}))) as any;
 				}
+				const reaction: ChatMessage["reaction"] = [];
+				for (let react of message.reaction) {
+					let sender;
+					if (react.sender.toString("hex") === this.self.id) {
+						sender = { id: this.self.id, name: this.self.name };
+					} else {
+						sender = await (this.core as VoidIdentity)
+							.lookup(react.sender)
+							.then((peer) => ({
+								id: peer.publicKey,
+								name: peer.name,
+							}))
+							.catch(() => ({
+								id: react.sender.toString("hex"),
+							}));
+					}
+					reaction.push({ sender: sender as any, char: react.char });
+				}
 				this.emitInternal(
 					["conversation", "message", conversation.toString("hex")],
 					{
@@ -350,15 +438,10 @@ export class VoidInterface extends EventEmitter2 {
 							id: message.id.toString("hex"),
 							sender: sender,
 							timestamp: message.timestamp,
-							target: message.target,
 							body: message.body,
-							reaction: message.reaction.map(
-								(r: ChatReaction) => ({
-									type: r.type,
-									sender: r.sender.toString("hex"),
-								})
-							),
+							reaction,
 							attachments: message.attachments,
+							target: message.target?.toString("hex"),
 						},
 						replyTo: replyTo?.toString("hex"),
 					}
@@ -366,19 +449,36 @@ export class VoidInterface extends EventEmitter2 {
 			}
 		);
 		this.core?.on(["conversation", "remove"], ({ conversation, message }) =>
-			this.emitInternal(["conversation", "remove"], {
-				conversation: conversation.toString("hex"),
-				message: message.toString("hex"),
-			})
+			this.emitInternal(
+				["conversation", "remove", conversation.toString("hex")],
+				message.toString("hex")
+			)
 		);
 		this.core?.on(
 			["conversation", "react"],
-			({ conversation, target, replyTo }) =>
-				this.emitInternal(["conversation", "react"], {
-					conversation: conversation.toString("hex"),
-					target: target.toString("hex"),
-					replyTo: replyTo.toString("hex"),
-				})
+			async ({ conversation, target, replyTo, sender: op, reaction }) => {
+				let sender;
+				if (op.toString("hex") === this.self.id) {
+					sender = { id: this.self.id, name: this.self.name };
+				} else {
+					sender = await (this.core as VoidIdentity)
+						.lookup(op)
+						.then((peer) => ({
+							id: peer.publicKey,
+							name: peer.name,
+						}))
+						.catch(() => ({ id: op.toString("hex") }));
+				}
+				this.emitInternal(
+					["conversation", "react", conversation.toString("hex")],
+					{
+						target: target.toString("hex"),
+						replyTo: replyTo.toString("hex"),
+						sender: sender,
+						reaction,
+					}
+				);
+			}
 		);
 	}
 
@@ -443,11 +543,9 @@ export class VoidInterface extends EventEmitter2 {
 				);
 		});
 		this.onInternal(["request", "conversation", "list"], () => {
-			this.core
-				?.conversationsList()
-				.then((data) =>
-					this.emitInternal(["conversation", "list"], data)
-				);
+			this.core?.conversationsList().then((data) => {
+				this.emitInternal(["conversation", "list"], data);
+			});
 		});
 		this.onInternal(
 			["request", "conversation", "*"],
@@ -463,7 +561,10 @@ export class VoidInterface extends EventEmitter2 {
 				}
 				const convo = that.core?.conversations.get(id);
 				convo
-					?.latest(data.last, data.limit)
+					?.latest(
+						data.last ? Buffer.from(data.last, "hex") : undefined,
+						data.limit
+					)
 					.then(async (messages) => {
 						const ret: ChatMessage[] = [];
 						for (let msg of messages) {
@@ -484,12 +585,41 @@ export class VoidInterface extends EventEmitter2 {
 										id: msg.sender.toString("hex"),
 									}));
 							}
+							const reaction: ChatMessage["reaction"] = [];
+							for (let react of msg.reaction) {
+								let sender;
+								if (
+									react.sender.toString("hex") ===
+									that.self.id
+								) {
+									sender = {
+										id: that.self.id,
+										name: that.self.name,
+									};
+								} else {
+									sender = await (that.core as VoidIdentity)
+										.lookup(react.sender)
+										.then((peer) => ({
+											id: peer.publicKey,
+											name: peer.name,
+										}))
+										.catch(() => ({
+											id: react.sender.toString("hex"),
+										}));
+								}
+								reaction.push({
+									sender: sender as any,
+									char: react.char,
+								});
+							}
 							ret.push({
 								id: msg.id.toString("hex"),
 								sender,
 								timestamp: msg.timestamp,
 								body: msg.body,
-								reaction: [],
+								reaction,
+								attachments: msg.attachments,
+								target: msg.target?.toString("hex"),
 							});
 						}
 						return ret;
@@ -509,6 +639,68 @@ export class VoidInterface extends EventEmitter2 {
 					: undefined,
 			});
 		});
+		this.onInternal(["request", "react"], (data) => {
+			const convo = this.core?.conversations.get(data.convo);
+			convo?.reactToMessage(
+				Buffer.from(data.message, "hex"),
+				data.reaction
+			);
+		});
+		this.onInternal(
+			["request", "attachment"],
+			({ attachment, message, convo }) => {
+				const conversation = this.core?.conversations.get(convo);
+				conversation
+					?.extractAttachment(
+						attachment,
+						Buffer.from(message, "hex"),
+						path.join(RNFS.CachesDirectoryPath, "attachments")
+					)
+					.then((filepath) =>
+						this.emitInternal(
+							["conversation", "attachment", message],
+							"file://" + filepath
+						)
+					);
+			}
+		);
+		this.onInternal(["request", "peer"], (id) => {
+			this.core
+				?.lookup(Buffer.from(id, "hex"))
+				.then((peer) => {
+					this.emitInternal(["peer", peer.publicKey], {
+						id: peer.publicKey,
+						name: peer.name,
+						bio: peer.bio,
+					});
+				})
+				.catch(
+					() => new Promise((resolve) => setTimeout(resolve, 3000))
+				)
+				.then(() =>
+					(this.core as VoidIdentity).lookup(Buffer.from(id, "hex"))
+				)
+				.then((peer) => {
+					this.emitInternal(["peer", peer.publicKey], {
+						id: peer.publicKey,
+						name: peer.name,
+						bio: peer.bio,
+					});
+				})
+				.catch((err) =>
+					this.emitInternal(["peer", "error"], {
+						id,
+						error: err.name,
+					})
+				);
+		});
+		this.onInternal(
+			["request", "conversation", "remove"],
+			({ conversation, message }) => {
+				const convo = this.core?.conversations.get(conversation);
+				convo?.deleteMessage(Buffer.from(message, "hex"));
+			}
+		);
 	}
 
 	getAvatar(id: string): string {

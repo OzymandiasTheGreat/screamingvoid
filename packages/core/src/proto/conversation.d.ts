@@ -54,15 +54,8 @@ type ChatInputType = {
 
 export const ChatInputType: ChatInputType;
 
-type ChatReactionType = {
-	NONE: 0;
-	LIKE: 1;
-};
-
-export const ChatReactionType: ChatReactionType;
-
 type ChatReaction = {
-	type: number;
+	char: string;
 	sender: Buffer;
 };
 const _react: ChatReaction;
@@ -107,7 +100,7 @@ type ChatInput = {
 	hashes: ChatHash;
 	target?: Buffer;
 	body?: string;
-	reaction?: number;
+	reaction?: string;
 	attachments: string[];
 };
 const _inp: ChatInput;

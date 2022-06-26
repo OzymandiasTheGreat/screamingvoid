@@ -1,8 +1,8 @@
 import Autobase from "autobase";
 import { Buffer } from "buffer";
 import { EventEmitter2 } from "eventemitter2";
-import fs from "fs";
-import fsp from "fs/promises";
+import * as fs from "fs";
+import * as fsp from "fs/promises";
 import HyperBee from "hyperbee";
 import Hypercore from "hypercore";
 import path from "path";
@@ -15,7 +15,6 @@ import {
 	ChatInput,
 	ChatInputType,
 	ChatMessage,
-	ChatReactionType,
 	ConversationInput,
 	ConversationMeta,
 	ConversationPeer,
@@ -149,14 +148,24 @@ export class VoidConversation extends EventEmitter2 {
 										const reaction = target.reaction.find(
 											(r) => r.sender.equals(op.sender),
 										);
-										if (reaction) {
-											reaction.type =
-												op.reaction as number;
+										if (op.reaction) {
+											if (reaction) {
+												reaction.char = op.reaction;
+											} else {
+												target.reaction.push({
+													char: op.reaction,
+													sender: op.sender,
+												});
+											}
 										} else {
-											target.reaction.push({
-												type: op.reaction as number,
-												sender: op.sender,
-											});
+											if (reaction) {
+												target.reaction.splice(
+													target.reaction.indexOf(
+														reaction,
+													),
+													1,
+												);
+											}
 										}
 										await b.put(
 											op.target as Buffer,
@@ -222,16 +231,16 @@ export class VoidConversation extends EventEmitter2 {
 								});
 								return;
 							case ChatInputType.DELETE:
-								const target: ChatMessage = (
-									await convo.feed.get(op.target as Buffer)
-								).value as any;
-								if (sender.equals(target.sender)) {
-									convo.emit(["conversation", "remove"], {
-										conversation: convo.id,
-										message: op.target,
-									});
-									return;
-								}
+								// const target: ChatMessage = (
+								// 	await convo.feed.get(op.target as Buffer)
+								// ).value as any;
+								// if (sender.equals(target.sender)) {
+								convo.emit(["conversation", "remove"], {
+									conversation: convo.id,
+									message: op.target,
+								});
+								return;
+							// }
 							case ChatInputType.REACT:
 								replyTo = (
 									(await convo.feed.get(op.target as Buffer))
@@ -241,6 +250,8 @@ export class VoidConversation extends EventEmitter2 {
 									conversation: convo.id,
 									target: op.target,
 									replyTo,
+									sender: op.sender,
+									reaction: op.reaction,
 								});
 								return;
 						}
@@ -259,7 +270,7 @@ export class VoidConversation extends EventEmitter2 {
 		const timestamp = Date.now();
 		const sender = this.host.keyPair.publicKey;
 		const hashes: ChatHash = {
-			body: hash(Buffer.from(message.body), null, 64),
+			body: hash(Buffer.from(message.body || ""), null, 64),
 			attachments: {},
 		};
 		const target = message.target || null;
@@ -330,32 +341,37 @@ export class VoidConversation extends EventEmitter2 {
 		}
 	}
 
-	async reactToMessage(target: Buffer, reaction: number): Promise<void> {
-		const reactions: number[] = Object.values(ChatReactionType);
-		if (reactions.includes(reaction)) {
-			await this.base.append(
-				sign(
-					ChatInput.encode({
-						type: ChatInputType.REACT,
-						sender: this.host.keyPair.publicKey,
-						timestamp: 0,
-						hashes: { body: null as any, attachments: {} },
-						target,
-						attachments: [],
-					}),
-					this.host.keyPair.secretKey,
-				),
-			);
-		}
+	async reactToMessage(target: Buffer, reaction?: string): Promise<void> {
+		await this.base.append(
+			sign(
+				ChatInput.encode({
+					type: ChatInputType.REACT,
+					sender: this.host.keyPair.publicKey,
+					timestamp: 0,
+					hashes: { body: null as any, attachments: {} },
+					target,
+					reaction,
+					attachments: [],
+				}),
+				this.host.keyPair.secretKey,
+			),
+		);
 	}
 
-	async latest(last?: number, limit = 20): Promise<ChatMessage[]> {
-		const timestamp = Buffer.allocUnsafe(8);
-		timestamp.writeBigUInt64BE(BigInt(last || Date.now()));
-		const suffix = Buffer.allocUnsafe(sodium.crypto_sign_BYTES).fill(0xff);
-		const prefix = Buffer.concat([timestamp, suffix]);
+	async latest(last?: Buffer, limit = 20): Promise<ChatMessage[]> {
+		let prefix: Buffer;
+		if (!last) {
+			const timestamp = Buffer.allocUnsafe(8);
+			timestamp.writeBigUInt64BE(BigInt(last || Date.now()));
+			const suffix = Buffer.allocUnsafe(sodium.crypto_sign_BYTES).fill(
+				0xff,
+			);
+			prefix = Buffer.concat([timestamp, suffix]);
+		} else {
+			prefix = last;
+		}
 		const stream = this.feed.createReadStream({
-			lte: prefix,
+			lt: prefix,
 			limit,
 			reverse: true,
 		});

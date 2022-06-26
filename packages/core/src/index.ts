@@ -138,6 +138,8 @@ export class VoidIdentity extends EventEmitter2 {
 			conversation: Buffer;
 			target: Buffer;
 			replyTo: Buffer;
+			sender: Buffer;
+			reaction?: string;
 		}) => void,
 	): Listener;
 	on(event: string | string[], listener: ListenerFn): Listener {
