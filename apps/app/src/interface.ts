@@ -5,6 +5,7 @@ import path from "path";
 import RNFS from "react-native-fs";
 import notifee from "@notifee/react-native";
 import { VoidIdentity } from "@screamingvoid/core";
+import { createNavigationContainerRef } from "@react-navigation/native";
 
 const AVATARS = path.join(RNFS.CachesDirectoryPath, "avatars");
 RNFS.mkdir(AVATARS);
@@ -37,42 +38,120 @@ export type ChatMessage = {
 	target?: string;
 };
 
+export type Peer = {
+	id: string;
+	name?: string;
+	bio?: string;
+};
+
+export const navigationRef = createNavigationContainerRef();
+
 export class VoidInterface extends EventEmitter2 {
 	core?: VoidIdentity;
 
 	constructor() {
 		super({ wildcard: true });
 		this.on(["conversation", "request"], ({ id, name, peers }) => {
+			let body: string;
+			const names = peers
+				.filter((p) => p.id !== this.self.id)
+				.map((p) => p.name);
+			const largeIcon = this.getAvatar(
+				peers.find((p) => p.id !== this.self.id)?.id as string
+			);
+			switch (names.length) {
+				case 1:
+					body = `${names[0]} wants to chat with you!`;
+					break;
+				case 2:
+					body = `${names[0]} and ${names[1]} want to chat with you in ${name}!`;
+					break;
+				case 3:
+					body = `${names[0]}, ${names[1]}, and ${names[2]} want to chat with you in ${name}!`;
+					break;
+				default:
+					body = `${names[0]}, ${names[1]}, and ${
+						names.length - 2
+					} more want to chat with you in ${name}!`;
+			}
 			notifee.displayNotification({
 				id: "chat-request",
 				data: { id },
 				title: "New Chat Request",
-				body: `${peers
-					.map((p) => p.name || "")
-					.join(", ")} want you to join a conversation ${name}`,
+				body,
 				android: {
 					channelId: "chat",
+					largeIcon,
+					pressAction: {
+						id: "convo-requests",
+					},
 					actions: [
 						{
 							title: "Accept",
-							pressAction: { id: "accept-convo" },
+							pressAction: { id: "convo-accept" },
 						},
 						{
 							title: "Reject",
-							pressAction: { id: "dismiss-convo" },
+							pressAction: { id: "convo-dismiss" },
 						},
 					],
 				},
 			});
 		});
+		this.on(
+			["conversation", "message", "*"],
+			({ conversation, message }) => {
+				const title = message.sender.name || message.sender.id;
+				const largeIcon = this.getAvatar(message.sender.id);
+				const id = `${conversation}/${message.id}`;
+				if (navigationRef.isReady()) {
+					const route = navigationRef.getCurrentRoute();
+					if (
+						route?.name === "Conversation" &&
+						conversation === (route?.params as any)?.id
+					) {
+						return;
+					}
+				}
+				notifee.displayNotification({
+					id,
+					data: { conversation },
+					title,
+					body: message.body,
+					android: {
+						channelId: "chat",
+						largeIcon,
+						pressAction: {
+							id: "convo-message",
+						},
+					},
+				});
+			}
+		);
 		notifee.onBackgroundEvent(async ({ detail, type }) => {
 			switch (type) {
 				case 1:
-					Linking.openURL(Linking.createURL("/chat-requests"));
+					switch (detail.pressAction?.id) {
+						case "convo-requests":
+							Linking.openURL(
+								Linking.createURL("/chat-requests")
+							);
+							break;
+						case "convo-message":
+							Linking.openURL(
+								Linking.createURL(
+									`/conversation/${
+										(detail.notification as any).data
+											.conversation
+									}`
+								)
+							);
+							break;
+					}
 					break;
 				case 2:
 					switch (detail.pressAction?.id) {
-						case "accept-convo":
+						case "convo-accept":
 							this.core?.emit(
 								["accept", "conversation"],
 								detail.notification?.data?.id as string
@@ -145,6 +224,10 @@ export class VoidInterface extends EventEmitter2 {
 		listener: (id: string) => void
 	): Listener;
 	private onInternal(
+		event: ["request", "start", "conversation"],
+		listener: (data: { peers: string[]; name: string }) => void
+	): Listener;
+	private onInternal(
 		event: any,
 		listener: (...args: any[]) => void
 	): Listener {
@@ -165,6 +248,10 @@ export class VoidInterface extends EventEmitter2 {
 	on(
 		event: ["peer", string],
 		listener: (data: { id: string; name: string; bio: string }) => void
+	): Listener;
+	on(
+		event: ["conversation", "new"],
+		listener: (id: string) => void
 	): Listener;
 	on(
 		event: ["conversation", "rename"],
@@ -247,6 +334,7 @@ export class VoidInterface extends EventEmitter2 {
 		event: ["peer", string],
 		data: { id: string; name: string; bio: string }
 	): boolean;
+	private emitInternal(event: ["conversation", "new"], id: string): boolean;
 	private emitInternal(
 		event: ["conversation", "rename"],
 		data: { id: string; name: string }
@@ -354,6 +442,10 @@ export class VoidInterface extends EventEmitter2 {
 		data: { attachment: string; message: string; convo: string }
 	): boolean;
 	emit(event: ["request", "peer"], id: string): boolean;
+	emit(
+		event: ["request", "start", "conversation"],
+		data: { peers: string[]; name: string }
+	): boolean;
 	emit(event: string | string[], ...values: any[]): boolean {
 		return super.emit(event, ...values);
 	}
@@ -377,6 +469,9 @@ export class VoidInterface extends EventEmitter2 {
 				id: publicKey.toString("hex"),
 				error: error.name,
 			})
+		);
+		this.core?.on(["conversation", "new"], (id) =>
+			this.emitInternal(["conversation", "new"], id)
 		);
 		this.core?.on(["conversation", "rename"], ({ id, name }) =>
 			this.emitInternal(["conversation", "rename"], {
@@ -699,6 +794,16 @@ export class VoidInterface extends EventEmitter2 {
 			({ conversation, message }) => {
 				const convo = this.core?.conversations.get(conversation);
 				convo?.deleteMessage(Buffer.from(message, "hex"));
+			}
+		);
+		this.onInternal(
+			["request", "start", "conversation"],
+			({ peers, name }) => {
+				const participants = new Set(peers);
+				this.core?.startConversation(
+					[...participants].map((p) => Buffer.from(p.trim(), "hex")),
+					name
+				);
 			}
 		);
 	}

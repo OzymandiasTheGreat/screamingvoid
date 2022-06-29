@@ -1,19 +1,18 @@
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
-import { NavigationProp, RouteProp } from "@react-navigation/native";
+import {
+	NavigationProp,
+	RouteProp,
+	DefaultTheme,
+} from "@react-navigation/native";
 import emojiRegex from "emoji-regex";
 import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import * as Sharing from "expo-sharing";
 import type levelup from "levelup";
+import notifee from "@notifee/react-native";
 import path from "path";
-import React, {
-	useCallback,
-	useContext,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useWindowDimensions, TouchableOpacity, View } from "react-native";
 import {
 	GiftedChat,
@@ -230,8 +229,16 @@ const CustomBubble = (
 						nextMessage={undefined}
 						previousMessage={undefined}
 						containerStyle={{
-							left: { backgroundColor: dark ? "#000" : "#fff" },
-							right: { backgroundColor: dark ? "#000" : "#fff" },
+							left: {
+								backgroundColor: dark
+									? "#000"
+									: DefaultTheme.colors.background,
+							},
+							right: {
+								backgroundColor: dark
+									? "#000"
+									: DefaultTheme.colors.background,
+							},
 						}}
 						wrapperStyle={{
 							left: {
@@ -257,8 +264,16 @@ const CustomBubble = (
 				<Bubble
 					{...props}
 					containerStyle={{
-						left: { backgroundColor: dark ? "#000" : "#fff" },
-						right: { backgroundColor: dark ? "#000" : "#fff" },
+						left: {
+							backgroundColor: dark
+								? "#000"
+								: DefaultTheme.colors.background,
+						},
+						right: {
+							backgroundColor: dark
+								? "#000"
+								: DefaultTheme.colors.background,
+						},
 					}}
 					wrapperStyle={{
 						left: {
@@ -405,7 +420,7 @@ const CustomToolbar = (
 				width: props.customText
 					? width - (props.replying ? 144 : 96)
 					: width - (props.replying ? 96 : 48),
-				backgroundColor: dark ? SECONDARY_LIGHT : SECONDARY_DARK,
+				backgroundColor: SECONDARY_LIGHT,
 				borderRadius: 32,
 				marginHorizontal: 10,
 			}}
@@ -705,6 +720,17 @@ export const Conversation: React.FC<{
 			listener4.off();
 		};
 	}, [log, initial]);
+	useEffect(() => {
+		notifee
+			.getDisplayedNotifications()
+			.then((notifications) =>
+				notifee.cancelDisplayedNotifications(
+					notifications
+						.map((n) => n.id || "")
+						.filter((n) => n.startsWith((route.params as any).id))
+				)
+			);
+	}, []);
 
 	const react = (reaction: string) => {
 		emitter.emit(["request", "react"], {

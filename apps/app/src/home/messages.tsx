@@ -4,10 +4,18 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import type levelup from "levelup";
 import React, { useContext, useEffect, useState } from "react";
 import { Image, FlatList, SafeAreaView, Text, View } from "react-native";
-import { List } from "react-native-paper";
+import {
+	Button,
+	Dialog,
+	FAB,
+	List,
+	Portal,
+	TextInput,
+} from "react-native-paper";
 import sublevel from "subleveldown";
 import { PrefsContext, VoidContext } from "../context";
-import type { MessageList } from "../interface";
+import type { MessageList, Peer } from "../interface";
+import { parsePeer } from "../util";
 
 dayjs.extend(relativeTime);
 
@@ -20,6 +28,10 @@ export const Messages: React.FC<{
 	const [log, setLog] = useState<levelup.LevelUp>();
 	const [convos, setConvos] = useState<MessageList>([]);
 	const [unread, setUnread] = useState<boolean[]>([]);
+	const [dialog, setDialog] = useState(false);
+	const [peers, setPeers] = useState<Peer[]>([]);
+	const [peer, setPeer] = useState("");
+	const [name, setName] = useState("");
 
 	useEffect(() => {
 		setLog(
@@ -31,7 +43,16 @@ export const Messages: React.FC<{
 	}, []);
 	useEffect(() => {
 		const listener = emitter.on(["conversation", "list"], async (data) => {
-			setConvos(data);
+			setConvos(
+				data.sort((a, b) => {
+					const cmp =
+						(b.last?.timestamp as any) - (a.last?.timestamp as any);
+					if (isNaN(cmp)) {
+						return -1000000;
+					}
+					return cmp;
+				})
+			);
 			const status = [];
 			for (let convo of data) {
 				const last = await log?.get(convo.id).catch(() => null);
@@ -67,7 +88,17 @@ export const Messages: React.FC<{
 						timestamp: data.message.timestamp,
 					};
 				}
-				setConvos(list);
+				setConvos(
+					list.sort((a, b) => {
+						const cmp =
+							(b.last?.timestamp as any) -
+							(a.last?.timestamp as any);
+						if (isNaN(cmp)) {
+							return -1000000;
+						}
+						return cmp;
+					})
+				);
 				setUnread(status);
 			}
 		);
@@ -75,6 +106,52 @@ export const Messages: React.FC<{
 			listener.off();
 		};
 	}, [convos, log]);
+	useEffect(() => {
+		const listener = emitter.on(["conversation", "new"], (id) => {
+			console.log(id);
+			emitter.emit(["request", "conversation", "list"]);
+		});
+		return () => {
+			listener.off();
+		};
+	}, []);
+
+	const showDialog = () => setDialog(true);
+	const hideDialog = () => {
+		setDialog(false);
+		setPeers([]);
+		setPeer("");
+		setName("");
+	};
+	const addPeer = () => {
+		try {
+			const participant = parsePeer(peer.trim());
+			emitter.on(["peer", participant], (peer) =>
+				setPeers((prev) =>
+					prev.map((participant) => {
+						if (participant.id !== peer.id) {
+							return participant;
+						}
+						participant.name = peer.name;
+						participant.bio = peer.bio;
+						return participant;
+					})
+				)
+			);
+			emitter.emit(["request", "peer"], participant);
+			setPeers((prev) => [...prev, { id: participant }]);
+			setPeer("");
+		} catch {}
+	};
+	const startConvo = () => {
+		if (peers.length) {
+			emitter.emit(["request", "start", "conversation"], {
+				peers: peers.map((p) => p.id),
+				name,
+			});
+		}
+		hideDialog();
+	};
 
 	const render = ({
 		item,
@@ -141,6 +218,30 @@ export const Messages: React.FC<{
 		);
 	};
 
+	const renderPeer = ({ item }: { item: Peer }) => {
+		return (
+			<List.Item
+				title={item.name || item.id}
+				titleNumberOfLines={1}
+				titleEllipsizeMode="middle"
+				description={item.bio}
+				descriptionNumberOfLines={1}
+				descriptionEllipsizeMode="tail"
+				left={(props) => (
+					<Image
+						{...props}
+						source={{
+							uri: emitter.getAvatar(item.id),
+							width: 32,
+							height: 32,
+						}}
+						borderRadius={16}
+					/>
+				)}
+			/>
+		);
+	};
+
 	return (
 		<SafeAreaView
 			style={{
@@ -148,6 +249,44 @@ export const Messages: React.FC<{
 			}}
 		>
 			<FlatList data={convos} renderItem={render} />
+			<FAB
+				icon="message-text"
+				onPress={showDialog}
+				style={{
+					position: "absolute",
+					bottom: 0,
+					right: 0,
+					margin: 25,
+				}}
+			/>
+			<Portal>
+				<Dialog visible={dialog} onDismiss={hideDialog}>
+					<Dialog.Title>New Conversation</Dialog.Title>
+					<Dialog.Content>
+						<TextInput
+							label="Participant"
+							value={peer}
+							onChangeText={setPeer}
+							right={
+								<TextInput.Icon name="plus" onPress={addPeer} />
+							}
+							onSubmitEditing={addPeer}
+						/>
+						{peers.length > 1 && (
+							<TextInput
+								label="Name"
+								value={name}
+								onChangeText={setName}
+							/>
+						)}
+						<FlatList data={peers} renderItem={renderPeer} />
+					</Dialog.Content>
+					<Dialog.Actions>
+						<Button onPress={hideDialog}>Cancel</Button>
+						<Button onPress={startConvo}>Chat</Button>
+					</Dialog.Actions>
+				</Dialog>
+			</Portal>
 		</SafeAreaView>
 	);
 };

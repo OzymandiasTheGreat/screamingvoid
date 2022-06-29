@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
+	useColorScheme,
 	FlatList,
 	Image,
 	SafeAreaView,
@@ -7,6 +8,7 @@ import {
 	View,
 } from "react-native";
 import {
+	ActivityIndicator,
 	Button,
 	Dialog,
 	FAB,
@@ -22,10 +24,12 @@ import type { LevelUp } from "levelup";
 import sublevel from "subleveldown";
 import type { SavedIdentity } from "./interface";
 import { PrefsContext, VoidContext } from "./context";
+import { PRIMARY_DARK, PRIMARY_LIGHT } from "./colors";
 
 export const Login: React.FC = () => {
 	const prefs = useContext(PrefsContext);
 	const emitter = useContext(VoidContext);
+	const dark = useColorScheme() === "dark";
 	const [iddb, setIdDB] = useState<LevelUp>();
 	const [identities, setIdentities] = useState<SavedIdentity[]>([]);
 	const [prompt, setPrompt] = useState(false);
@@ -33,6 +37,7 @@ export const Login: React.FC = () => {
 	const [bio, setBio] = useState("");
 	const [avatar, setAvatar] = useState("");
 	const [base64, setBase64] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		if (prefs) {
@@ -115,6 +120,7 @@ export const Login: React.FC = () => {
 		SecureStore.getItemAsync(pk).then((json) => {
 			if (json) {
 				const id = JSON.parse(json);
+				setLoading(true);
 				emitter.emit(["request", "open"], id);
 			}
 		});
@@ -135,8 +141,24 @@ export const Login: React.FC = () => {
 		/>
 	);
 
-	return (
-		<SafeAreaView style={{ flex: 1 }}>
+	return loading ? (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				alignItems: "center",
+				justifyContent: "center",
+				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+			}}
+		>
+			<ActivityIndicator size="large" />
+		</SafeAreaView>
+	) : (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+			}}
+		>
 			<FlatList data={identities} renderItem={renderIdentity} />
 			<FAB
 				icon="plus"

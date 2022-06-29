@@ -189,7 +189,14 @@ export class VoidPeer extends EventEmitter2 {
 										.catch(
 											() =>
 												new Promise((resolve) =>
-													setTimeout(resolve, 5000),
+													setTimeout(resolve, 15000),
+												),
+										)
+										.then(() => host.convoStore.get(id))
+										.catch(
+											() =>
+												new Promise((resolve) =>
+													setTimeout(resolve, 15000),
 												),
 										)
 										.then(() => host.convoStore.get(id))

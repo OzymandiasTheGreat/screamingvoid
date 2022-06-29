@@ -109,6 +109,10 @@ export class VoidIdentity extends EventEmitter2 {
 		listener: (data: { publicKey: Buffer; error: Error }) => void,
 	): Listener;
 	on(
+		event: ["conversation", "new"],
+		listener: (id: string) => void,
+	): Listener;
+	on(
 		event: ["conversation", "rename"],
 		listener: (data: { id: Buffer; name: string }) => void,
 	): Listener;
@@ -225,6 +229,7 @@ export class VoidIdentity extends EventEmitter2 {
 							}", "${key.toString("hex")}"`,
 						);
 					}
+					this.emit(["conversation", "new"], key.toString("hex"));
 				} else {
 					// TODO Unload convo
 				}
@@ -435,7 +440,7 @@ export class VoidIdentity extends EventEmitter2 {
 		publicKeys: Buffer[],
 		name: string,
 	): Promise<Buffer> {
-		if (!publicKeys.length || !name) {
+		if (!publicKeys.length || typeof name !== "string") {
 			throw new Error("Invalid conversation");
 		}
 		const id = hash(
@@ -713,7 +718,7 @@ export class VoidIdentity extends EventEmitter2 {
 					id: msg[0].id.toString("hex"),
 					timestamp: msg[0].timestamp,
 					sender: {
-						id: sender.publicKey,
+						id: sender.publicKey as string,
 						name: sender.name,
 					},
 					body: msg[0].body,
