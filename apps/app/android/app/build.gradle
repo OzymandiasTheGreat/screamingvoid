@@ -235,6 +235,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+		release {
+			storeFile file('/home/ozymandias/GoogleDrive/void/release.jks')
+			storePassword '$System.env.VOID_PASSWORD'
+			keyAlias 'app'
+			keyPassword '$System.env.VOID_PASSWORD'
+		}
     }
     buildTypes {
         debug {
