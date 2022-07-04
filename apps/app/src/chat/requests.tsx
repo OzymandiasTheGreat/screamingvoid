@@ -1,6 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import { NavigationProp, RouteProp } from "@react-navigation/native";
+import {
+	NativeStackHeaderProps,
+	NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
+import React, { useContext, useEffect, useLayoutEffect, useState } from "react";
 import { FlatList, Image, SafeAreaView, View } from "react-native";
-import { IconButton, List } from "react-native-paper";
+import { Appbar, IconButton, List, Menu } from "react-native-paper";
 import { VoidContext } from "../context";
 
 type Request = {
@@ -9,10 +14,52 @@ type Request = {
 	peers: { id: string; name?: string; bio?: string }[];
 };
 
-export const ChatRequests: React.FC = () => {
+const Header: React.FC<NativeStackHeaderProps> = ({ back, navigation }) => {
+	const emitter = useContext(VoidContext);
+	const [visible, setVisible] = useState(false);
+
+	return (
+		<Appbar.Header>
+			{!!back && (
+				<Appbar.BackAction onPress={() => navigation.goBack()} />
+			)}
+			<Appbar.Content title="Chat Requests" />
+			<Menu
+				visible={visible}
+				onDismiss={() => setVisible(false)}
+				anchor={
+					<Appbar.Action
+						icon={({ size }) => (
+							<Image
+								source={{
+									uri: emitter.getAvatar(emitter.self.id),
+									width: size,
+									height: size,
+								}}
+								borderRadius={size / 2}
+							/>
+						)}
+						onPress={() => setVisible(true)}
+					/>
+				}
+			></Menu>
+		</Appbar.Header>
+	);
+};
+
+export const ChatRequests: React.FC<{
+	navigation: NavigationProp<any>;
+	route: RouteProp<any>;
+}> = ({ navigation, route }) => {
 	const emitter = useContext(VoidContext);
 	const [requests, setRequests] = useState<Request[]>([]);
 
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerShown: true,
+			header: (props) => <Header {...props} />,
+		} as NativeStackNavigationOptions);
+	}, [navigation, route]);
 	useEffect(() => {
 		const listener1 = emitter.on(["conversation", "requests"], (data) =>
 			setRequests(data)

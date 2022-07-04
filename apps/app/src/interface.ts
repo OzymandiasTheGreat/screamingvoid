@@ -175,7 +175,15 @@ export class VoidInterface extends EventEmitter2 {
 		listener: (data: SavedIdentity) => void
 	): Listener;
 	private onInternal(
+		event: ["request", "close"],
+		listener: () => void
+	): Listener;
+	private onInternal(
 		event: ["request", "conversation", "requests"],
+		listener: () => void
+	): Listener;
+	private onInternal(
+		event: ["request", "conversation", "muted"],
 		listener: () => void
 	): Listener;
 	private onInternal(
@@ -184,11 +192,27 @@ export class VoidInterface extends EventEmitter2 {
 	): Listener;
 	private onInternal(
 		event: ["request", "conversation", "list"],
-		listener: () => void
+		listener: (archived?: boolean) => void
 	): Listener;
 	private onInternal(
 		event: ["request", "conversation", "remove"],
 		listener: (data: { conversation: string; message: string }) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "conversation", "meta"],
+		listener: (convo: string) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "conversation", "rename"],
+		listener: (data: { id: string; name: string }) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "conversation", "archive"],
+		listener: (data: { id: string; archived: boolean }) => void
+	): Listener;
+	private onInternal(
+		event: ["request", "conversation", "mute"],
+		listener: (data: { id: string; muted: boolean }) => void
 	): Listener;
 	private onInternal(
 		event: ["request", "conversation", string],
@@ -254,8 +278,12 @@ export class VoidInterface extends EventEmitter2 {
 		listener: (id: string) => void
 	): Listener;
 	on(
-		event: ["conversation", "rename"],
-		listener: (data: { id: string; name: string }) => void
+		event: ["conversation", "rename", string],
+		listener: (name: string) => void
+	): Listener;
+	on(
+		event: ["conversation", "archive", string],
+		listener: (archived: boolean) => void
 	): Listener;
 	on(
 		event: ["conversation", "request"],
@@ -308,8 +336,22 @@ export class VoidInterface extends EventEmitter2 {
 		) => void
 	): Listener;
 	on(
+		event: ["conversation", "muted"],
+		listener: (
+			data: {
+				id: string;
+				name: string;
+				peers: { id: string; name?: string; bio?: string }[];
+			}[]
+		) => void
+	): Listener;
+	on(
 		event: ["conversation", "list"],
 		listener: (data: MessageList) => void
+	): Listener;
+	on(
+		event: ["conversation", "meta", string],
+		listener: (meta: { name: string; peers: string[] }) => void
 	): Listener;
 	on(
 		event: ["conversation", string],
@@ -336,8 +378,12 @@ export class VoidInterface extends EventEmitter2 {
 	): boolean;
 	private emitInternal(event: ["conversation", "new"], id: string): boolean;
 	private emitInternal(
-		event: ["conversation", "rename"],
-		data: { id: string; name: string }
+		event: ["conversation", "rename", string],
+		name: string
+	): boolean;
+	private emitInternal(
+		event: ["conversation", "archive", string],
+		archived: boolean
 	): boolean;
 	private emitInternal(
 		event: ["conversation", "request"],
@@ -388,8 +434,20 @@ export class VoidInterface extends EventEmitter2 {
 		}[]
 	): boolean;
 	private emitInternal(
+		event: ["conversation", "muted"],
+		data: {
+			id: string;
+			name: string;
+			peers: { id: string; name?: string; bio?: string }[];
+		}[]
+	): boolean;
+	private emitInternal(
 		event: ["conversation", "list"],
 		data: MessageList
+	): boolean;
+	private emitInternal(
+		event: ["conversation", "meta", string],
+		data: { name: string; peers: string[] }
 	): boolean;
 	private emitInternal(
 		event: ["conversation", string],
@@ -409,12 +467,27 @@ export class VoidInterface extends EventEmitter2 {
 		data: SavedIdentity & { name: string; bio: string; avatar: string }
 	): boolean;
 	emit(event: ["request", "open"], data: SavedIdentity): boolean;
+	emit(event: ["request", "close"]): boolean;
 	emit(event: ["request", "conversation", "requests"]): boolean;
+	emit(event: ["request", "conversation", "muted"]): boolean;
 	emit(event: ["accept", "conversation"], id: string): boolean;
 	emit(event: ["request", "conversation", "list"]): boolean;
 	emit(
 		event: ["request", "conversation", "remove"],
 		data: { conversation: string; message: string }
+	): boolean;
+	emit(event: ["request", "conversation", "meta"], convo: string): boolean;
+	emit(
+		event: ["request", "conversation", "rename"],
+		data: { id: string; name: string }
+	): boolean;
+	emit(
+		event: ["request", "conversation", "archive"],
+		data: { id: string; archived: boolean }
+	): boolean;
+	emit(
+		event: ["request", "conversation", "mute"],
+		data: { id: string; muted: boolean }
 	): boolean;
 	emit(
 		event: ["request", "conversation", string],
@@ -474,10 +547,10 @@ export class VoidInterface extends EventEmitter2 {
 			this.emitInternal(["conversation", "new"], id)
 		);
 		this.core?.on(["conversation", "rename"], ({ id, name }) =>
-			this.emitInternal(["conversation", "rename"], {
-				id: id.toString("hex"),
-				name,
-			})
+			this.emitInternal(
+				["conversation", "rename", id.toString("hex")],
+				name
+			)
 		);
 		this.core?.on(["conversation", "request"], ({ id, name, peers }) =>
 			this.emitInternal(["conversation", "request"], {
@@ -575,6 +648,12 @@ export class VoidInterface extends EventEmitter2 {
 				);
 			}
 		);
+		this.core?.on(["conversation", "archive"], ({ id, archived }) => {
+			this.emitInternal(
+				["conversation", "archive", id.toString("hex")],
+				archived
+			);
+		});
 	}
 
 	listen() {
@@ -583,8 +662,6 @@ export class VoidInterface extends EventEmitter2 {
 			this.emitInternal("loaded", !!this.core);
 		});
 		this.onInternal(["request", "create"], async (data) => {
-			// TODO DELETEME
-			console.log(data.publicKey);
 			const keyPair = {
 				publicKey: Buffer.from(data.publicKey, "hex"),
 				secretKey: Buffer.from(data.secretKey, "hex"),
@@ -605,10 +682,17 @@ export class VoidInterface extends EventEmitter2 {
 				"base64"
 			);
 			this.emitInternal("loaded", true);
+			notifee.displayNotification({
+				id: "service",
+				body: "Connected to Void network",
+				title: "Void",
+				android: {
+					asForegroundService: true,
+					channelId: "service",
+				},
+			});
 		});
 		this.onInternal(["request", "open"], async (data) => {
-			// TODO DELETEME
-			console.log(data.publicKey);
 			const keyPair = {
 				publicKey: Buffer.from(data.publicKey, "hex"),
 				secretKey: Buffer.from(data.secretKey, "hex"),
@@ -617,16 +701,39 @@ export class VoidInterface extends EventEmitter2 {
 				RNFS.DocumentDirectoryPath,
 				keyPair
 			);
-			// TODO DELETEME
-			this.core.onAny(console.log);
 			this.subscribe();
 			this.emitInternal("loaded", true);
+			notifee.displayNotification({
+				id: "service",
+				body: "Connected to Void network",
+				title: "Void",
+				android: {
+					asForegroundService: true,
+					channelId: "service",
+				},
+			});
+		});
+		this.onInternal(["request", "close"], async () => {
+			await this.core?.close();
+			delete this.core;
+			await notifee.stopForegroundService();
+			const loaded = this.listeners("loaded");
+			this.removeAllListeners();
+			loaded.forEach((listener) => this.on("loaded", listener));
+			this.emitInternal("loaded", false);
 		});
 		this.onInternal(["request", "conversation", "requests"], () => {
 			this.core
 				?.conversationRequests()
 				.then((data) =>
 					this.emitInternal(["conversation", "requests"], data)
+				);
+		});
+		this.onInternal(["request", "conversation", "muted"], () => {
+			this.core
+				?.conversationsMuted()
+				.then((data) =>
+					this.emitInternal(["conversation", "muted"], data)
 				);
 		});
 		this.onInternal(["accept", "conversation"], (id) => {
@@ -637,11 +744,41 @@ export class VoidInterface extends EventEmitter2 {
 					this.emitInternal(["conversation", "requests"], data)
 				);
 		});
-		this.onInternal(["request", "conversation", "list"], () => {
-			this.core?.conversationsList().then((data) => {
+		this.onInternal(["request", "conversation", "list"], (archived) => {
+			this.core?.conversationsList(archived).then((data) => {
 				this.emitInternal(["conversation", "list"], data);
 			});
 		});
+		this.onInternal(["request", "conversation", "meta"], (id) => {
+			const convo = this.core?.conversations.get(id);
+			if (convo) {
+				this.emitInternal(["conversation", "meta", id], {
+					name: convo?.name as string,
+					peers: Object.keys(convo?.peers as any),
+				});
+			}
+		});
+		this.onInternal(
+			["request", "conversation", "rename"],
+			({ id, name }) => {
+				this.core?.renameConversation(Buffer.from(id, "hex"), name);
+			}
+		);
+		this.onInternal(
+			["request", "conversation", "archive"],
+			({ id, archived }) => {
+				this.core?.archiveConversation(
+					Buffer.from(id, "hex"),
+					archived
+				);
+			}
+		);
+		this.onInternal(
+			["request", "conversation", "mute"],
+			({ id, muted }) => {
+				this.core?.muteConversation(Buffer.from(id, "hex"), muted);
+			}
+		);
 		this.onInternal(
 			["request", "conversation", "*"],
 			function (this: { event: string }, data) {
@@ -760,6 +897,13 @@ export class VoidInterface extends EventEmitter2 {
 			}
 		);
 		this.onInternal(["request", "peer"], (id) => {
+			if (id === this.self.id) {
+				return this.emitInternal(["peer", id], {
+					id,
+					name: this.self.name as string,
+					bio: this.self.bio as string,
+				});
+			}
 			this.core
 				?.lookup(Buffer.from(id, "hex"))
 				.then((peer) => {
@@ -770,7 +914,7 @@ export class VoidInterface extends EventEmitter2 {
 					});
 				})
 				.catch(
-					() => new Promise((resolve) => setTimeout(resolve, 3000))
+					() => new Promise((resolve) => setTimeout(resolve, 7500))
 				)
 				.then(() =>
 					(this.core as VoidIdentity).lookup(Buffer.from(id, "hex"))
@@ -815,7 +959,7 @@ export class VoidInterface extends EventEmitter2 {
 				return this.core?.lookup(Buffer.from(id, "hex"));
 			}
 		});
-		return "file://" + avatar;
+		return `file://${avatar}?cache=${Date.now()}`;
 	}
 
 	get self() {
@@ -824,5 +968,23 @@ export class VoidInterface extends EventEmitter2 {
 			name: this.core?.name,
 			bio: this.core?.bio,
 		};
+	}
+
+	async updateProfile({
+		avatar,
+		name,
+		bio,
+	}: {
+		avatar?: string;
+		name?: string;
+		bio?: string;
+	}) {
+		this.core?.updateProfile({ avatar, name, bio }).then(() =>
+			this.emit(["update", "profile"], {
+				id: this.self.id,
+				name: this.self.name,
+				bio: this.self.bio,
+			})
+		);
 	}
 }

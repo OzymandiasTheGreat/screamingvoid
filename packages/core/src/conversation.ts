@@ -70,6 +70,21 @@ export class VoidConversation extends EventEmitter2 {
 		}
 	}
 
+	async close() {
+		this.removeAllListeners();
+		this.base.close();
+		for (let input of this.base.inputs) {
+			await input.close();
+		}
+		for (let output of this.base.outputs) {
+			await output.close();
+		}
+		for (let storage of this.storage.values()) {
+			storage._feed.close();
+		}
+		this.host.conversations.delete(this.id.toString("hex"));
+	}
+
 	static async open(
 		id: Buffer,
 		meta: ConversationMeta,

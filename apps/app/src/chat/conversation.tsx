@@ -12,7 +12,13 @@ import * as Sharing from "expo-sharing";
 import type levelup from "levelup";
 import notifee from "@notifee/react-native";
 import path from "path";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, {
+	useContext,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from "react";
 import { useWindowDimensions, TouchableOpacity, View } from "react-native";
 import {
 	GiftedChat,
@@ -26,7 +32,17 @@ import {
 } from "react-native-gifted-chat";
 import type { IMessage, BubbleProps } from "react-native-gifted-chat";
 import { Modalize } from "react-native-modalize";
-import { Headline, IconButton, List, Text } from "react-native-paper";
+import {
+	Appbar,
+	Button,
+	Dialog,
+	IconButton,
+	List,
+	Menu,
+	Provider,
+	Text,
+	TextInput,
+} from "react-native-paper";
 import { Keyboard } from "react-native-ui-lib";
 import sublevel from "subleveldown";
 import { PrefsContext, VoidContext } from "../context";
@@ -35,7 +51,7 @@ import { useColorScheme } from "react-native";
 import { SwipeRow } from "react-native-swipe-list-view";
 import { EmojiPalette } from "../shared/emoji";
 import { imageURIs } from "../util";
-import { ChatMessage } from "../interface";
+import { ChatMessage, Peer } from "../interface";
 import {
 	PRIMARY_BLUE,
 	PRIMARY_DARK,
@@ -46,6 +62,11 @@ import {
 	TRANSPARENT,
 } from "../colors";
 import { Image } from "react-native";
+import { Profile } from "../shared/profile";
+import {
+	NativeStackHeaderProps,
+	NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 
 interface Message extends IMessage {
 	reaction: { sender: { id: string; name: string }; char: string }[];
@@ -58,80 +79,98 @@ interface ReplyingTo {
 	avatar: string;
 }
 
-const UserSheet: React.FC<{
-	visible: boolean;
-	user?: Message["user"];
-	onClose: (val: boolean) => void;
-}> = ({ visible, user, onClose }) => {
+const Header: React.FC<
+	NativeStackHeaderProps & {
+		participants: React.RefObject<Modalize>;
+		showRename: () => void;
+	}
+> = ({ back, navigation, route, participants, showRename }) => {
 	const emitter = useContext(VoidContext);
-	const dark = useColorScheme() === "dark";
-	const ref = useRef<Modalize>(null);
-	const [avatar, setAvatar] = useState("");
-	const [name, setName] = useState("");
-	const [bio, setBio] = useState("");
+	const [visible, setVisible] = useState(false);
+	const [title, setTitle] = useState(route.name);
+	const [canRename, setCanRename] = useState(false);
 
 	useEffect(() => {
-		if (visible) {
-			ref.current?.open();
-		} else {
-			ref.current?.close();
-		}
-	}, [visible]);
+		const listener = emitter.on(
+			["conversation", "rename", (route.params as any).id],
+			(name) => setTitle(name)
+		);
+		return () => {
+			listener.off();
+		};
+	}, [route]);
 	useEffect(() => {
-		if (user) {
-			setAvatar(user.avatar as string);
-			setName(user.name as string);
-		}
-	}, [user]);
-	useEffect(() => {
-		if (user) {
-			const listener = emitter.once(
-				["peer", user._id as string],
-				(peer) => {
-					setName(peer.name);
-					setBio(peer.bio);
-				},
-				{ objectify: true }
-			);
-			emitter.emit(["request", "peer"], user._id as string);
-			return () => {
-				(listener as any).off();
-			};
-		}
-	}, [user]);
+		const listener = emitter.once(
+			["conversation", "meta", (route.params as any).id],
+			({ name, peers }) => {
+				if (name && peers.length > 2) {
+					setCanRename(true);
+					return setTitle(name);
+				}
+				const other = peers.filter(
+					(p: string) => p !== emitter.self.id
+				)[0];
+				emitter.once(["peer", other], ({ name }) => setTitle(name));
+				emitter.emit(["request", "peer"], other);
+			},
+			{ objectify: true }
+		);
+		emitter.emit(
+			["request", "conversation", "meta"],
+			(route.params as any).id
+		);
+		return () => {
+			(listener as any).off();
+		};
+	}, [route]);
+
+	const showParticipants = () => {
+		participants.current?.open();
+		setVisible(false);
+	};
 
 	return (
-		<Modalize
-			ref={ref}
-			onClose={() => onClose(false)}
-			childrenStyle={{
-				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-			}}
-			withHandle={false}
-			modalHeight={384}
-			HeaderComponent={
-				<View
-					style={{
-						alignItems: "center",
-						justifyContent: "space-around",
-						width: "100%",
-						minHeight: 256,
-						backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-					}}
-				>
-					<Image
-						source={{
-							uri: avatar as string,
-							width: 128,
-							height: 128,
-						}}
-						borderRadius={64}
+		<Appbar.Header>
+			{!!back && (
+				<Appbar.BackAction onPress={() => navigation.goBack()} />
+			)}
+			<Appbar.Content title={title} />
+			<Menu
+				visible={visible}
+				onDismiss={() => setVisible(false)}
+				anchor={
+					<Appbar.Action
+						icon={({ size }) => (
+							<Image
+								source={{
+									uri: emitter.getAvatar(emitter.self.id),
+									width: size,
+									height: size,
+								}}
+								borderRadius={size / 2}
+							/>
+						)}
+						onPress={() => setVisible(true)}
 					/>
-					<Headline>{name}</Headline>
-					<Text>{bio}</Text>
-				</View>
-			}
-		></Modalize>
+				}
+			>
+				<Menu.Item
+					title="Participants"
+					icon="account-multiple"
+					onPress={showParticipants}
+				/>
+				{canRename && (
+					<Menu.Item
+						title="Rename Conversation"
+						icon="pen"
+						onPress={() => {
+							showRename();
+							setVisible(false);
+						}}
+					/>
+				)}
+			</Menu>
+		</Appbar.Header>
 	);
 };
 
@@ -539,6 +578,85 @@ const CustomToolbar = (
 	);
 };
 
+const Participants = React.forwardRef<
+	Modalize,
+	{
+		id: string;
+		profile: React.RefObject<Modalize>;
+		setUser: (user: Message["user"]) => void;
+	}
+>(({ id, profile, setUser }, ref) => {
+	const emitter = useContext(VoidContext);
+	const dark = useColorScheme() === "dark";
+	const [peers, setPeers] = useState<Peer[]>([]);
+
+	useEffect(() => {
+		const peerListeners: any[] = [];
+		const listener = emitter.once(
+			["conversation", "meta", id],
+			(meta) => {
+				for (let pid of meta.peers) {
+					peerListeners.push(
+						emitter.once(
+							["peer", pid],
+							(p) => setPeers((prev) => [...prev, p]),
+							{ objectify: true }
+						)
+					);
+					emitter.emit(["request", "peer"], pid);
+				}
+			},
+			{ objectify: true }
+		);
+		emitter.emit(["request", "conversation", "meta"], id);
+		return () => {
+			(listener as any).off();
+			peerListeners.forEach((l) => l.off());
+		};
+	}, [id]);
+
+	const showProfile = (id: string) => {
+		setUser({ _id: id, avatar: emitter.getAvatar(id) });
+		profile.current?.open();
+	};
+
+	const renderPeer = ({ item }: { item: Peer }) => (
+		<List.Item
+			title={item.name || item.id}
+			onPress={() => showProfile(item.id)}
+			left={(props) => (
+				<List.Icon
+					{...props}
+					icon={({ size }) => (
+						<Image
+							source={{
+								uri: emitter.getAvatar(item.id),
+								width: size,
+								height: size,
+							}}
+							borderRadius={size / 2}
+						/>
+					)}
+				/>
+			)}
+		/>
+	);
+
+	return (
+		<Modalize
+			ref={ref}
+			flatListProps={{
+				data: peers,
+				renderItem: renderPeer,
+			}}
+			withHandle={false}
+			childrenStyle={{
+				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+			}}
+		/>
+	);
+});
+
 export const Conversation: React.FC<{
 	navigation: NavigationProp<any>;
 	route: RouteProp<any>;
@@ -549,6 +667,9 @@ export const Conversation: React.FC<{
 	const [log, setLog] = useState<levelup.LevelUp>();
 	const [initial, setInitial] = useState(true);
 
+	const [rename, setRename] = useState(false);
+	const [newName, setNewName] = useState("");
+
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [current, setCurrent] = useState<Message | null | undefined>(null);
 	const [loading, setLoading] = useState(false);
@@ -556,7 +677,8 @@ export const Conversation: React.FC<{
 	const reactions = useRef<Modalize>(null);
 	const context = useRef<Modalize>(null);
 	const actions = useRef<Modalize>(null);
-	const [profile, setProfile] = useState(false);
+	const profile = useRef<Modalize>(null);
+	const participants = useRef<Modalize>(null);
 	const [currentUser, setCurrentUser] = useState<Message["user"]>();
 
 	const [keyboard, setKeyboard] = useState<string | undefined>();
@@ -622,6 +744,18 @@ export const Conversation: React.FC<{
 		}
 	};
 
+	useLayoutEffect(() => {
+		navigation.setOptions({
+			headerShown: true,
+			header: (props) => (
+				<Header
+					{...props}
+					participants={participants}
+					showRename={() => setRename(true)}
+				/>
+			),
+		} as NativeStackNavigationOptions);
+	}, [navigation, route]);
 	useEffect(
 		() =>
 			setLog(
@@ -636,22 +770,12 @@ export const Conversation: React.FC<{
 		const listener1 = emitter.on(
 			["conversation", (route.params as any).id as string],
 			(msgs) => {
-				if (initial) {
-					setMessages(
+				setMessages((prev) =>
+					GiftedChat.prepend(
+						prev,
 						msgs.map(messageMapper).filter((m) => !!m) as Message[]
-					);
-					log?.put((route.params as any).id, msgs[0].id);
-					setInitial(false);
-				} else {
-					setMessages((prev) =>
-						GiftedChat.prepend(
-							prev,
-							msgs
-								.map(messageMapper)
-								.filter((m) => !!m) as Message[]
-						)
-					);
-				}
+					)
+				);
 				setLoading(false);
 			}
 		);
@@ -707,12 +831,6 @@ export const Conversation: React.FC<{
 					messages.filter((m) => m._id !== message)
 				)
 		);
-		if (log && initial) {
-			emitter.emit(
-				["request", "conversation", (route.params as any).id as string],
-				{}
-			);
-		}
 		return () => {
 			listener1?.off();
 			listener2.off();
@@ -720,6 +838,12 @@ export const Conversation: React.FC<{
 			listener4.off();
 		};
 	}, [log, initial]);
+	useEffect(() => {
+		emitter.emit(
+			["request", "conversation", (route.params as any).id as string],
+			{}
+		);
+	}, []);
 	useEffect(() => {
 		notifee
 			.getDisplayedNotifications()
@@ -745,7 +869,7 @@ export const Conversation: React.FC<{
 	const remove = () => {
 		emitter.emit(["request", "conversation", "remove"], {
 			conversation: (route.params as any).id,
-			message: current?._id,
+			message: current?._id as string,
 		});
 		context.current?.close();
 	};
@@ -762,252 +886,300 @@ export const Conversation: React.FC<{
 		setLoading(true);
 		emitter.emit(
 			["request", "conversation", (route.params as any).id as string],
-			{ last: messages[messages.length - 1]._id }
+			{ last: messages[messages.length - 1]._id as string }
 		);
 	};
 
+	const renameConvo = () => {
+		if (newName) {
+			emitter.emit(["request", "conversation", "rename"], {
+				id: (route.params as any).id,
+				name: newName,
+			});
+			setRename(false);
+		}
+	};
+	const renameCancel = () => {
+		setNewName("");
+		setRename(false);
+	};
+
 	return (
-		<View style={{ flex: 1 }}>
-			<GiftedChat
-				user={{ _id: emitter.self.id, name: emitter.self.name }}
-				messages={messages}
-				imageStyle={{ margin: 7 }}
-				messagesContainerStyle={{
-					paddingBottom: 7 + attachments.length * 48,
-				}}
-				onPressActionButton={() => actions.current?.open()}
-				onPressAvatar={(user) => {
-					setProfile(true);
-					setCurrentUser(user);
-				}}
-				loadEarlier
-				onLoadEarlier={loadEarlier}
-				isLoadingEarlier={loading}
-				infiniteScroll
-				renderBubble={(props) => (
-					<CustomBubble
-						{...props}
-						convo={(route.params as any).id}
-						reactions={reactions}
-						context={context}
-						setCurrent={setCurrent}
-						setReplying={setReplying}
-					/>
-				)}
-				renderInputToolbar={(props) => (
-					<CustomToolbar
-						{...props}
-						convo={(route.params as any).id}
-						attachments={attachments}
-						setAttachments={setAttachments}
-						customText={text}
-						setCustomText={setText}
-						setSelection={setSelection}
-						replying={replying}
-						setReplying={setReplying}
-						setKeyboard={setKeyboard}
-					/>
-				)}
-			/>
-			<Keyboard.KeyboardAccessoryView
-				kbComponent={keyboard}
-				onItemSelected={(_, e) => insertEmoji(e)}
-				onKeyboardResigned={() => setKeyboard(undefined)}
-			/>
-			<Modalize
-				ref={actions}
-				withHandle={false}
-				adjustToContentHeight
-				childrenStyle={{
-					backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-				}}
-			>
-				<View
-					style={{
-						flexDirection: "row",
-						alignItems: "center",
-						justifyContent: "space-around",
+		<Provider>
+			<View style={{ flex: 1 }}>
+				<GiftedChat
+					user={{ _id: emitter.self.id, name: emitter.self.name }}
+					messages={messages}
+					imageStyle={{ margin: 7 }}
+					messagesContainerStyle={{
+						paddingBottom: 7 + attachments.length * 48,
+					}}
+					onPressActionButton={() => actions.current?.open()}
+					onPressAvatar={(user) => {
+						setCurrentUser(user);
+						profile.current?.open();
+					}}
+					loadEarlier
+					onLoadEarlier={loadEarlier}
+					isLoadingEarlier={loading}
+					infiniteScroll
+					renderBubble={(props) => (
+						<CustomBubble
+							{...props}
+							convo={(route.params as any).id}
+							reactions={reactions}
+							context={context}
+							setCurrent={setCurrent}
+							setReplying={setReplying}
+						/>
+					)}
+					renderInputToolbar={(props) => (
+						<CustomToolbar
+							{...props}
+							convo={(route.params as any).id}
+							attachments={attachments}
+							setAttachments={setAttachments}
+							customText={text}
+							setCustomText={setText}
+							setSelection={setSelection}
+							replying={replying}
+							setReplying={setReplying}
+							setKeyboard={setKeyboard}
+						/>
+					)}
+				/>
+				<Keyboard.KeyboardAccessoryView
+					kbComponent={keyboard}
+					onItemSelected={(_, e) => insertEmoji(e)}
+					onKeyboardResigned={() => setKeyboard(undefined)}
+				/>
+				<Modalize
+					ref={actions}
+					withHandle={false}
+					adjustToContentHeight
+					childrenStyle={{
+						backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
 					}}
 				>
-					<IconButton
-						icon="camera"
-						size={32}
-						color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-						onPress={() => {
-							ImagePicker.launchCameraAsync({
-								quality: 0.9,
-							}).then((image) => {
-								if (!image.cancelled) {
-									setAttachments((a) => [image.uri, ...a]);
-								}
-							});
-							actions.current?.close();
+					<View
+						style={{
+							flexDirection: "row",
+							alignItems: "center",
+							justifyContent: "space-around",
 						}}
-					/>
-					<IconButton
-						icon="image"
-						size={32}
-						color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-						onPress={() => {
-							ImagePicker.launchImageLibraryAsync().then(
-								(image) => {
+					>
+						<IconButton
+							icon="camera"
+							size={32}
+							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+							onPress={() => {
+								ImagePicker.launchCameraAsync({
+									quality: 0.9,
+								}).then((image) => {
 									if (!image.cancelled) {
 										setAttachments((a) => [
 											image.uri,
 											...a,
 										]);
 									}
+								});
+								actions.current?.close();
+							}}
+						/>
+						<IconButton
+							icon="image"
+							size={32}
+							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+							onPress={() => {
+								ImagePicker.launchImageLibraryAsync().then(
+									(image) => {
+										if (!image.cancelled) {
+											setAttachments((a) => [
+												image.uri,
+												...a,
+											]);
+										}
+									}
+								);
+								actions.current?.close();
+							}}
+						/>
+						<IconButton
+							icon="paperclip"
+							size={32}
+							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+							onPress={() => {
+								DocumentPicker.getDocumentAsync().then(
+									(doc) => {
+										if (doc.type === "success") {
+											setAttachments((a) => [
+												doc.uri,
+												...a,
+											]);
+										}
+									}
+								);
+								actions.current?.close();
+							}}
+						/>
+					</View>
+				</Modalize>
+				<Modalize
+					ref={reactions}
+					withHandle={false}
+					adjustToContentHeight={true}
+					childrenStyle={{
+						backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+					}}
+					flatListProps={{
+						data: current?.reaction,
+						renderItem: ({ item }) => (
+							<List.Item
+								title={item.sender.name}
+								left={(props) => (
+									<Text
+										{...props}
+										style={{ textAlignVertical: "center" }}
+									>
+										{item.char}
+									</Text>
+								)}
+							/>
+						),
+					}}
+				></Modalize>
+				<Modalize
+					ref={context}
+					withHandle={false}
+					adjustToContentHeight={true}
+					childrenStyle={{
+						backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+					}}
+				>
+					<View>
+						<View
+							style={{
+								flex: 1,
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-around",
+								height: 64,
+							}}
+						>
+							<IconButton
+								icon="close"
+								size={32}
+								color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+								onPress={() => react("")}
+							/>
+							<Text
+								style={{ fontSize: 32 }}
+								onPress={() => react("👍")}
+							>
+								👍
+							</Text>
+							<Text
+								style={{ fontSize: 32 }}
+								onPress={() => react("❤️")}
+							>
+								❤️
+							</Text>
+							<Text
+								style={{ fontSize: 32 }}
+								onPress={() => react("😆")}
+							>
+								😆
+							</Text>
+							<Text
+								style={{ fontSize: 32 }}
+								onPress={() => react("😮")}
+							>
+								😮
+							</Text>
+							<Text
+								style={{ fontSize: 32 }}
+								onPress={() => react("😢")}
+							>
+								😢
+							</Text>
+							<IconButton
+								icon="plus"
+								size={32}
+								color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+								onPress={() =>
+									setCustomReaction(() =>
+										customReaction
+											? undefined
+											: EmojiPalette
+									)
 								}
-							);
-							actions.current?.close();
-						}}
-					/>
-					<IconButton
-						icon="paperclip"
-						size={32}
-						color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-						onPress={() => {
-							DocumentPicker.getDocumentAsync().then((doc) => {
-								if (doc.type === "success") {
-									setAttachments((a) => [doc.uri, ...a]);
-								}
-							});
-							actions.current?.close();
-						}}
-					/>
-				</View>
-			</Modalize>
-			<Modalize
-				ref={reactions}
-				withHandle={false}
-				adjustToContentHeight={true}
-				childrenStyle={{
-					backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-				}}
-				flatListProps={{
-					data: current?.reaction,
-					renderItem: ({ item }) => (
+							/>
+						</View>
 						<List.Item
-							title={item.sender.name}
+							title="Copy Message"
+							onPress={() => {
+								Clipboard.setStringAsync(current?.text || "");
+								context.current?.close();
+							}}
 							left={(props) => (
-								<Text
-									{...props}
-									style={{ textAlignVertical: "center" }}
-								>
-									{item.char}
-								</Text>
+								<List.Icon {...props} icon="clipboard-text" />
 							)}
 						/>
-					),
-				}}
-			></Modalize>
-			<Modalize
-				ref={context}
-				withHandle={false}
-				adjustToContentHeight={true}
-				childrenStyle={{
-					backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-				}}
-			>
-				<View>
-					<View
-						style={{
-							flex: 1,
-							flexDirection: "row",
-							alignItems: "center",
-							justifyContent: "space-around",
-							height: 64,
-						}}
-					>
-						<IconButton
-							icon="close"
-							size={32}
-							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-							onPress={() => react("")}
+						<List.Item
+							title="Reply"
+							onPress={() => {
+								setReplying({
+									id: current?._id as string,
+									avatar: current?.user.avatar as string,
+								});
+								context.current?.close();
+							}}
+							left={(props) => (
+								<List.Icon {...props} icon="reply" />
+							)}
 						/>
-						<Text
-							style={{ fontSize: 32 }}
-							onPress={() => react("👍")}
-						>
-							👍
-						</Text>
-						<Text
-							style={{ fontSize: 32 }}
-							onPress={() => react("❤️")}
-						>
-							❤️
-						</Text>
-						<Text
-							style={{ fontSize: 32 }}
-							onPress={() => react("😆")}
-						>
-							😆
-						</Text>
-						<Text
-							style={{ fontSize: 32 }}
-							onPress={() => react("😮")}
-						>
-							😮
-						</Text>
-						<Text
-							style={{ fontSize: 32 }}
-							onPress={() => react("😢")}
-						>
-							😢
-						</Text>
-						<IconButton
-							icon="plus"
-							size={32}
-							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-							onPress={() =>
-								setCustomReaction(() =>
-									customReaction ? undefined : EmojiPalette
-								)
+						{current?.user._id === emitter.self.id && (
+							<List.Item
+								title="Delete message"
+								onPress={remove}
+								left={(props) => (
+									<List.Icon {...props} icon="close" />
+								)}
+							/>
+						)}
+						<Keyboard.KeyboardAccessoryView
+							kbComponent={customReaction}
+							onItemSelected={(_, e) => react(e)}
+							onKeyboardResigned={() =>
+								setCustomReaction(undefined)
 							}
 						/>
 					</View>
-					<List.Item
-						title="Copy Message"
-						onPress={() => {
-							Clipboard.setStringAsync(current?.text || "");
-							context.current?.close();
-						}}
-						left={(props) => (
-							<List.Icon {...props} icon="clipboard-text" />
-						)}
-					/>
-					<List.Item
-						title="Reply"
-						onPress={() => {
-							setReplying({
-								id: current?._id as string,
-								avatar: current?.user.avatar as string,
-							});
-							context.current?.close();
-						}}
-						left={(props) => <List.Icon {...props} icon="reply" />}
-					/>
-					{current?.user._id === emitter.self.id && (
-						<List.Item
-							title="Delete message"
-							onPress={remove}
-							left={(props) => (
-								<List.Icon {...props} icon="close" />
-							)}
+				</Modalize>
+				<Participants
+					ref={participants}
+					id={(route.params as any).id}
+					profile={profile}
+					setUser={setCurrentUser}
+				/>
+				<Profile ref={profile} user={currentUser?._id as any} />
+				<Dialog visible={rename} onDismiss={renameCancel}>
+					<Dialog.Title>Rename Conversation</Dialog.Title>
+					<Dialog.Content>
+						<TextInput
+							autoFocus
+							label="Name"
+							value={newName}
+							onChangeText={setNewName}
+							onSubmitEditing={renameConvo}
 						/>
-					)}
-					<Keyboard.KeyboardAccessoryView
-						kbComponent={customReaction}
-						onItemSelected={(_, e) => react(e)}
-						onKeyboardResigned={() => setCustomReaction(undefined)}
-					/>
-				</View>
-			</Modalize>
-			<UserSheet
-				visible={profile}
-				user={currentUser}
-				onClose={setProfile}
-			/>
-		</View>
+					</Dialog.Content>
+					<Dialog.Actions>
+						<Button onPress={renameCancel}>Cancel</Button>
+						<Button onPress={renameConvo}>Rename</Button>
+					</Dialog.Actions>
+				</Dialog>
+			</View>
+		</Provider>
 	);
 };

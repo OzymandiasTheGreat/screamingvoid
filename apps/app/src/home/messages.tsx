@@ -22,7 +22,7 @@ dayjs.extend(relativeTime);
 export const Messages: React.FC<{
 	navigation: NavigationProp<any>;
 	route: RouteProp<any>;
-}> = ({ navigation }) => {
+}> = ({ navigation, route }) => {
 	const emitter = useContext(VoidContext);
 	const prefs = useContext(PrefsContext);
 	const [log, setLog] = useState<levelup.LevelUp>();
@@ -32,7 +32,29 @@ export const Messages: React.FC<{
 	const [peers, setPeers] = useState<Peer[]>([]);
 	const [peer, setPeer] = useState("");
 	const [name, setName] = useState("");
+	const [current, setCurrent] = useState("");
+	const [menu, setMenu] = useState(false);
 
+	useEffect(() => {
+		if ((route.params as any).id) {
+			const participant = parsePeer((route.params as any).id.trim());
+			emitter.once(["peer", participant], (peer) =>
+				setPeers((prev) =>
+					prev.map((participant) => {
+						if (participant.id !== peer.id) {
+							return participant;
+						}
+						participant.name = peer.name;
+						participant.bio = peer.bio;
+						return participant;
+					})
+				)
+			);
+			emitter.emit(["request", "peer"], participant);
+			setPeers([{ id: participant }]);
+			setDialog(true);
+		}
+	}, [route]);
 	useEffect(() => {
 		setLog(
 			sublevel(prefs, "VOID_MESSAGE_LOG", {
@@ -64,11 +86,14 @@ export const Messages: React.FC<{
 			}
 			setUnread(status);
 		});
-		emitter.emit(["request", "conversation", "list"]);
+		emitter.emit(
+			["request", "conversation", "list"],
+			(route.params as any).archived
+		);
 		return () => {
-			listener.off();
+			(listener as any).off();
 		};
-	}, [log]);
+	}, [log, route]);
 	useEffect(() => {
 		const listener = emitter.on(
 			["conversation", "message", "*"],
@@ -108,13 +133,36 @@ export const Messages: React.FC<{
 	}, [convos, log]);
 	useEffect(() => {
 		const listener = emitter.on(["conversation", "new"], (id) => {
-			console.log(id);
-			emitter.emit(["request", "conversation", "list"]);
+			emitter.emit(
+				["request", "conversation", "list"],
+				(route.params as any).archived
+			);
 		});
 		return () => {
 			listener.off();
 		};
-	}, []);
+	}, [route]);
+	useEffect(() => {
+		const listener = emitter.on(
+			["conversation", "archive", "*"],
+			function (this: { event: string }, archived) {
+				if (archived !== (route.params as any).archived) {
+					const id = this.event.slice(this.event.lastIndexOf("."));
+					setConvos((prev) => {
+						const index = prev.findIndex((c) => c.id === id);
+						if (index >= 0) {
+							prev.splice(index, 1);
+							return [...prev];
+						}
+						return prev;
+					});
+				}
+			}
+		);
+		return () => {
+			listener.off();
+		};
+	}, [route]);
 
 	const showDialog = () => setDialog(true);
 	const hideDialog = () => {
@@ -126,7 +174,7 @@ export const Messages: React.FC<{
 	const addPeer = () => {
 		try {
 			const participant = parsePeer(peer.trim());
-			emitter.on(["peer", participant], (peer) =>
+			emitter.once(["peer", participant], (peer) =>
 				setPeers((prev) =>
 					prev.map((participant) => {
 						if (participant.id !== peer.id) {
@@ -141,7 +189,9 @@ export const Messages: React.FC<{
 			emitter.emit(["request", "peer"], participant);
 			setPeers((prev) => [...prev, { id: participant }]);
 			setPeer("");
-		} catch {}
+		} catch (err) {
+			console.log(err);
+		}
 	};
 	const startConvo = () => {
 		if (peers.length) {
@@ -176,12 +226,18 @@ export const Messages: React.FC<{
 		const right = item.last
 			? `${dayjs(item.last.timestamp).fromNow()}`
 			: "";
+		const onLongPress = () => {
+			setCurrent(item.id);
+			setMenu(true);
+		};
+
 		return (
 			<List.Item
 				key={item.id}
 				onPress={() =>
 					navigation.navigate("Conversation", { id: item.id })
 				}
+				onLongPress={onLongPress}
 				titleStyle={{ fontWeight: unread[index] ? "700" : "400" }}
 				descriptionStyle={{ fontWeight: unread[index] ? "700" : "400" }}
 				descriptionNumberOfLines={1}
@@ -260,6 +316,41 @@ export const Messages: React.FC<{
 				}}
 			/>
 			<Portal>
+				<Dialog visible={menu} onDismiss={() => setMenu(false)}>
+					<Dialog.Content>
+						<List.Item
+							title={
+								(route.params as any).archived
+									? "Unarchive"
+									: "Archive"
+							}
+							onPress={() => {
+								setMenu(false);
+								emitter.emit(
+									["request", "conversation", "archive"],
+									{
+										id: current,
+										archived: !(route.params as any)
+											.archived,
+									}
+								);
+							}}
+						/>
+						<List.Item
+							title="Mute"
+							onPress={() => {
+								setMenu(false);
+								setConvos((prev) =>
+									prev.filter((c) => c.id !== current)
+								);
+								emitter.emit(
+									["request", "conversation", "mute"],
+									{ id: current, muted: true }
+								);
+							}}
+						/>
+					</Dialog.Content>
+				</Dialog>
 				<Dialog visible={dialog} onDismiss={hideDialog}>
 					<Dialog.Title>New Conversation</Dialog.Title>
 					<Dialog.Content>

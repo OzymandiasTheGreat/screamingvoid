@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import fs from "fs/promises";
+import * as fs from "fs/promises";
 import mimetypes from "mime-types";
 import sodium from "sodium-universal";
 import { CONVO_ID_LEN, CONVO_INPUT, CONVO_REQUEST } from "./constants";

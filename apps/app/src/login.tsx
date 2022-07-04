@@ -17,6 +17,7 @@ import {
 	TextInput,
 } from "react-native-paper";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
+import notifee from "@notifee/react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as SecureStore from "expo-secure-store";
 import sodium from "sodium-universal";
@@ -97,16 +98,32 @@ export const Login: React.FC = () => {
 			)
 			.then(() => {
 				setPrompt(false);
-				emitter.emit(["request", "create"], {
-					...id,
-					name,
-					bio,
-					avatar: base64,
-				});
-				setName("");
-				setBio("");
-				setAvatar("");
-				setBase64("");
+				setLoading(true);
+				notifee
+					.displayNotification({
+						id: "service",
+						body: "Void is running",
+						title: "Void",
+						android: {
+							asForegroundService: true,
+							channelId: "service",
+						},
+					})
+					.then(
+						() => new Promise((resolve) => setTimeout(resolve, 750))
+					)
+					.then(() => {
+						emitter.emit(["request", "create"], {
+							...id,
+							name,
+							bio,
+							avatar: base64,
+						});
+						setName("");
+						setBio("");
+						setAvatar("");
+						setBase64("");
+					});
 			});
 	};
 	const cancelIdentity = () => {
@@ -119,9 +136,24 @@ export const Login: React.FC = () => {
 	const onIdentityPress = (pk: string) => {
 		SecureStore.getItemAsync(pk).then((json) => {
 			if (json) {
-				const id = JSON.parse(json);
 				setLoading(true);
-				emitter.emit(["request", "open"], id);
+				notifee
+					.displayNotification({
+						id: "service",
+						body: "Void is running",
+						title: "Void",
+						android: {
+							asForegroundService: true,
+							channelId: "service",
+						},
+					})
+					.then(
+						() => new Promise((resolve) => setTimeout(resolve, 750))
+					)
+					.then(() => {
+						const id = JSON.parse(json);
+						emitter.emit(["request", "open"], id);
+					});
 			}
 		});
 	};
@@ -157,11 +189,13 @@ export const Login: React.FC = () => {
 			style={{
 				flex: 1,
 				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+				paddingTop: 48,
 			}}
 		>
 			<FlatList data={identities} renderItem={renderIdentity} />
 			<FAB
 				icon="plus"
+				label="Create Identity"
 				onPress={() => setPrompt(true)}
 				style={{
 					position: "absolute",

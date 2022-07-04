@@ -10,9 +10,14 @@ export const parsePeer = (peer: string): string => {
 	if (peer.length === 64) {
 		pk = Buffer.from(peer, "hex");
 	} else if (peer.startsWith("screamingvoid://")) {
-		pk = Buffer.from(peer.slice("screamingvoid://peer/".length), "base64");
+		pk = Buffer.from(peer.slice("screamingvoid://peer/".length), "hex");
 	} else {
 		throw new Error("InvalidPeer");
 	}
 	return pk.toString("hex");
+};
+
+export const encodePeer = (peer: string): string => {
+	const uri = "screamingvoid://peer/" + peer;
+	return uri;
 };

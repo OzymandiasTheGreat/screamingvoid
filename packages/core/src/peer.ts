@@ -1,4 +1,3 @@
-import { HyperbeeLiveStream } from "@geut/hyperbee-live-stream";
 import { Buffer } from "buffer";
 import { EventEmitter2 } from "eventemitter2";
 import HyperBee from "hyperbee";
@@ -63,6 +62,7 @@ export class VoidPeer extends EventEmitter2 {
 	}
 
 	async close(err?: Error) {
+		this.removeAllListeners();
 		this.plex?.end(() => this.plex.destroy());
 		this.feed?._feed.close();
 		this.socket.destroy();

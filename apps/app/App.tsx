@@ -23,6 +23,7 @@ import { ChatRequests } from "./src/chat/requests";
 import { Conversation } from "./src/chat/conversation";
 import { EmojiStorage } from "./src/emoji-storage";
 import { PRIMARY_DARK, PRIMARY_LIGHT } from "./src/colors";
+import { MutedConversations } from "./src/chat/muted";
 
 const Stack = createNativeStackNavigator();
 
@@ -38,6 +39,9 @@ const App: React.FC<{ emitter: VoidInterface }> = ({ emitter }) => {
 			screens: {
 				ChatRequests: "chat-requests",
 				Conversation: "conversation/:id",
+				Home: {
+					screens: { Messages: "peer/:id" },
+				},
 			},
 		},
 	};
@@ -125,6 +129,10 @@ const App: React.FC<{ emitter: VoidInterface }> = ({ emitter }) => {
 									<Stack.Screen
 										name="ChatRequests"
 										component={ChatRequests}
+									/>
+									<Stack.Screen
+										name="MutedChats"
+										component={MutedConversations}
 									/>
 									<Stack.Screen
 										name="Conversation"

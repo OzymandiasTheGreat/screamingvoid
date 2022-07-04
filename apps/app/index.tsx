@@ -11,8 +11,8 @@ notifee.createChannel({
 	id: "service",
 	name: "Network Background Service",
 	description: "Persistent notification indicating network status",
-	importance: AndroidImportance.NONE,
-	visibility: AndroidVisibility.PUBLIC,
+	importance: AndroidImportance.LOW,
+	visibility: AndroidVisibility.SECRET,
 });
 notifee.createChannel({
 	id: "chat",
@@ -29,15 +29,6 @@ notifee.registerForegroundService(
 			emitter.listen();
 		})
 );
-notifee.displayNotification({
-	id: "service",
-	body: "Void is running",
-	title: "Void",
-	android: {
-		asForegroundService: true,
-		channelId: "service",
-	},
-});
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
