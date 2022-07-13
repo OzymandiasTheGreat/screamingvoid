@@ -718,8 +718,16 @@ export class VoidInterface extends EventEmitter2 {
 			delete this.core;
 			await notifee.stopForegroundService();
 			const loaded = this.listeners("loaded");
+			const requests = this.listeners(["conversation", "request"]);
+			const messages = this.listeners(["conversation", "message", "*"]);
 			this.removeAllListeners();
 			loaded.forEach((listener) => this.on("loaded", listener));
+			requests.forEach((listener) =>
+				this.on(["conversation", "request"], listener)
+			);
+			messages.forEach((listener) =>
+				this.on(["conversation", "message", "*"], listener)
+			);
 			this.emitInternal("loaded", false);
 		});
 		this.onInternal(["request", "conversation", "requests"], () => {

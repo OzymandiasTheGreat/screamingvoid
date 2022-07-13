@@ -50,7 +50,7 @@ const Header: React.FC<NativeStackHeaderProps> = ({ back, navigation }) => {
 									width: size,
 									height: size,
 								}}
-								borderRadius={size / 2}
+								style={{ borderRadius: size / 2 }}
 							/>
 						)}
 						onPress={() => setVisible(true)}
@@ -123,7 +123,7 @@ export const MutedConversations: React.FC<{
 							<Image
 								key={source.uri}
 								source={source}
-								borderRadius={imgSize / 2}
+								style={{ borderRadius: imgSize / 2 }}
 							/>
 						))}
 					</View>
@@ -147,7 +147,7 @@ export const MutedConversations: React.FC<{
 									width: size,
 									height: size,
 								}}
-								borderRadius={size / 2}
+								style={{ borderRadius: size / 2 }}
 							/>
 						)}
 					/>

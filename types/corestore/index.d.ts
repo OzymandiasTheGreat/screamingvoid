@@ -6,9 +6,13 @@ declare module "corestore" {
 	class Corestore {
 		constructor(storage: string | raf);
 
-		get(key: Buffer | ({ key?: Buffer, name?: string } & HypercoreOptions), options?: { key?: Buffer, name?: string } & HypercoreOptions): Hypercore;
+		get(
+			key: Buffer | ({ key?: Buffer; name?: string } & HypercoreOptions),
+			options?: { key?: Buffer; name?: string } & HypercoreOptions,
+		): Hypercore;
 		replicate(isInitiator: boolean | Duplex): Duplex;
 		namespace(name: string): Corestore;
+		close(): Promise<void>;
 	}
 
 	export default Corestore;

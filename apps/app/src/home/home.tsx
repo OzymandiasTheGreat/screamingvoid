@@ -65,16 +65,18 @@ const Header: React.FC<
 				onDismiss={() => setVisible(false)}
 				anchor={
 					<Appbar.Action
-						icon={({ size }) => (
-							<Image
-								source={{
-									uri: emitter.getAvatar(emitter.self.id),
-									width: size,
-									height: size,
-								}}
-								borderRadius={size / 2}
-							/>
-						)}
+						icon={({ size }) => {
+							return (
+								<Image
+									source={{
+										uri: emitter.getAvatar(emitter.self.id),
+										width: size,
+										height: size,
+									}}
+									style={{ borderRadius: size / 2 }}
+								/>
+							);
+						}}
 						onPress={() => setVisible(true)}
 					/>
 				}

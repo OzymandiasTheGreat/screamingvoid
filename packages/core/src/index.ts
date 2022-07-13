@@ -59,6 +59,7 @@ export class VoidIdentity extends EventEmitter2 {
 	convoStore!: levelup.LevelUp;
 	convoMeta!: levelup.LevelUp;
 	conversations: Map<string, VoidConversation> = new Map();
+	orphanedInputs: Map<string, Map<string, ConversationPeer>> = new Map();
 
 	directConnections: Set<string> = new Set();
 
@@ -239,6 +240,22 @@ export class VoidIdentity extends EventEmitter2 {
 				}
 			},
 		);
+		this.convoStore.on("put", (key, convo) => {
+			if (this.orphanedInputs.has(key.toString("hex"))) {
+				const inputs: Map<string, ConversationPeer> =
+					this.orphanedInputs.get(key.toString("hex")) as any;
+				let update = false;
+				for (let [peer, input] of inputs.entries()) {
+					(convo as ConversationInput).peers[peer] = input;
+					inputs.delete(peer);
+					update = true;
+				}
+				this.orphanedInputs.delete(key.toString("hex"));
+				if (update) {
+					this.convoStore.put(key, convo);
+				}
+			}
+		});
 		this._storageReady.resolve();
 	}
 
@@ -252,75 +269,92 @@ export class VoidIdentity extends EventEmitter2 {
 			maxPeers: this.maxPeers,
 		});
 		this.swarm.on("connection", async (socket, info) => {
-			const peer = await VoidPeer.open(socket, info, this);
-			peer.on(["peer", "disconnect"], (publicKey: Buffer) =>
-				this.peers.delete(publicKey.toString("hex")),
-			);
-			peer.on(
-				["conversation", "rename"],
-				async ({ id, name }: { id: Buffer; name: string }) => {
-					const meta: ConversationMeta = await this.convoMeta
-						.get(id)
-						.catch(() => null);
-					const convo: ConversationInput = await this.convoStore
-						.get(id)
-						.catch(() => null);
-					if (convo) {
-						await this.convoStore.put(id, { ...convo, name });
-					}
-					if (meta) {
-						await this.convoMeta.put(id, { ...meta, name });
-						this.emit(["conversation", "rename"], { id, name });
-					}
-				},
-			);
-			peer.on(
-				["conversation", "request"],
-				async ({
-					id,
-					name,
-					peers,
-				}: {
-					id: Buffer;
-					name: string;
-					peers: Buffer[];
-				}) => {
-					const peerPromises: Promise<Peer>[] = [];
-					const convo: ConversationInput = { name, peers: {} };
-					for (let peer of peers) {
-						if (!this.keyPair.publicKey.equals(peer)) {
-							peerPromises.push(
-								this.lookup(peer)
-									.catch((err) => {
-										console.error(err);
-										return this.lookup(peer);
-									})
-									.catch((err) => {
-										console.error(err);
-										return {
-											publicKey: peer.toString("hex"),
-										} as Peer;
-									}),
-							);
-							convo.peers[peer.toString("hex")] = null as any;
-						}
-					}
-					await this.convoStore.put(id, convo);
-					this.renameConversation(id, name);
-					const participants = await Promise.all(peerPromises);
-					this.emit(["conversation", "request"], {
-						id,
-						name,
-						peers: participants,
+			const peer = await VoidPeer.open(socket, info, this).catch(
+				(err) => {
+					this.swarm.leavePeer(info.publicKey);
+					info.ban();
+					this.emit(["peer", "error"], {
+						publicKey: info.publicKey,
+						error: err,
 					});
 				},
 			);
-			peer.onAny((e, ...args) => {
-				if ((e as string).startsWith("peer.")) {
-					this.emit(e, ...args);
-				}
-			});
-			this.peers.set(peer.peerId, peer);
+			if (peer) {
+				peer.on(["peer", "disconnect"], (publicKey: Buffer) =>
+					this.peers.delete(publicKey.toString("hex")),
+				);
+				peer.on(
+					["conversation", "rename"],
+					async ({ id, name }: { id: Buffer; name: string }) => {
+						const meta: ConversationMeta = await this.convoMeta
+							.get(id)
+							.catch(() => null);
+						const convo: ConversationInput = await this.convoStore
+							.get(id)
+							.catch(() => null);
+						if (convo) {
+							await this.convoStore.put(id, { ...convo, name });
+						}
+						if (meta) {
+							await this.convoMeta.put(id, { ...meta, name });
+							this.emit(["conversation", "rename"], {
+								id,
+								name,
+							});
+						}
+					},
+				);
+				peer.on(
+					["conversation", "request"],
+					async ({
+						id,
+						name,
+						peers,
+					}: {
+						id: Buffer;
+						name: string;
+						peers: Buffer[];
+					}) => {
+						const peerPromises: Promise<Peer>[] = [];
+						const convo: ConversationInput = { name, peers: {} };
+						for (let peer of peers) {
+							if (!this.keyPair.publicKey.equals(peer)) {
+								peerPromises.push(
+									this.lookup(peer)
+										.catch((err) => {
+											console.error(err);
+											return this.lookup(peer);
+										})
+										.catch((err) => {
+											console.error(err);
+											return {
+												publicKey:
+													peer.toString("hex"),
+											} as Peer;
+										}),
+								);
+								convo.peers[peer.toString("hex")] =
+									null as any;
+							}
+						}
+						await this.convoStore.put(id, convo);
+						this.renameConversation(id, name);
+						const participants = await Promise.all(peerPromises);
+						this.emit(["conversation", "request"], {
+							id,
+							name,
+							peers: participants,
+						});
+					},
+				);
+				peer.onAny((e, ...args) => {
+					if ((e as string).startsWith("peer.")) {
+						this.emit(e, ...args);
+					}
+				});
+				this.peers.set(peer.peerId, peer);
+				peer.replicate();
+			}
 		});
 		// TODO Join topics
 		for (let id of this.directConnections) {
@@ -445,6 +479,7 @@ export class VoidIdentity extends EventEmitter2 {
 		for (let peer of this.peers.values()) {
 			await peer.close();
 		}
+		await this.corestore.close();
 	}
 
 	get avatar(): Promise<string> {

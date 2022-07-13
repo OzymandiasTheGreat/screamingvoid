@@ -4,13 +4,9 @@ import {
 	RouteProp,
 	DefaultTheme,
 } from "@react-navigation/native";
+import { fs, dialog, path as tauriPath, tauri } from "@tauri-apps/api";
 import emojiRegex from "emoji-regex";
 import * as Clipboard from "expo-clipboard";
-import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
-import * as Sharing from "expo-sharing";
-import type levelup from "levelup";
-import notifee from "@notifee/react-native";
 import path from "path";
 import React, {
 	useContext,
@@ -29,6 +25,8 @@ import {
 	InputToolbarProps,
 	ComposerProps,
 	SendProps,
+	Time,
+	Actions,
 } from "react-native-gifted-chat";
 import type { IMessage, BubbleProps } from "react-native-gifted-chat";
 import { Modalize } from "react-native-modalize";
@@ -43,12 +41,10 @@ import {
 	Text,
 	TextInput,
 } from "react-native-paper";
-import sublevel from "subleveldown";
-import { PrefsContext, VoidContext } from "../context";
+import { VoidContext } from "../context";
 import { FlatList } from "react-native";
 import { useColorScheme } from "react-native";
 import { SwipeRow } from "react-native-swipe-list-view";
-import { Palette } from "../shared/emoji";
 import { imageURIs } from "../util";
 import { ChatMessage, Peer } from "../interface";
 import {
@@ -66,6 +62,7 @@ import {
 	NativeStackHeaderProps,
 	NativeStackNavigationOptions,
 } from "@react-navigation/native-stack";
+import { Palette } from "../shared/emoji";
 
 interface Message extends IMessage {
 	reaction: { sender: { id: string; name: string }; char: string }[];
@@ -146,7 +143,7 @@ const Header: React.FC<
 									width: size,
 									height: size,
 								}}
-								borderRadius={size / 2}
+								style={{ borderRadius: size / 2 }}
 							/>
 						)}
 						onPress={() => setVisible(true)}
@@ -186,6 +183,7 @@ const CustomBubble = (
 	const dark = useColorScheme() === "dark";
 	const [pressed, setPressed] = useState(false);
 	const [reaction, setReaction] = useState<Record<string, number>>({});
+	const [downloadDir, setDownloadDir] = useState("");
 
 	useEffect(() => {
 		const reaction: Record<string, number> = {};
@@ -198,6 +196,9 @@ const CustomBubble = (
 		}
 		setReaction(reaction);
 	}, [props]);
+	useEffect(() => {
+		tauriPath.downloadDir().then(setDownloadDir);
+	}, []);
 
 	const isEmoji = (text?: string) => {
 		const trimmed = text?.trim();
@@ -216,7 +217,16 @@ const CustomBubble = (
 		emitter.once(
 			["conversation", "attachment", props.currentMessage?._id as string],
 			(uri) => {
-				Sharing.shareAsync(uri);
+				dialog
+					.save({
+						defaultPath: downloadDir,
+						title: "Save Attachment",
+					})
+					.then((filepath) => {
+						if (filepath) {
+							fs.copyFile(uri.slice("file://".length), filepath);
+						}
+					});
 			}
 		);
 		emitter.emit(["request", "attachment"], {
@@ -259,7 +269,13 @@ const CustomBubble = (
 					color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
 				/>
 			</View>
-			<View>
+			<View
+				onContextMenu={(e) => {
+					e.preventDefault();
+					props.setCurrent(props.currentMessage);
+					props.context.current?.open();
+				}}
+			>
 				{!!props.currentMessage?.replyingTo && (
 					<Bubble
 						{...props}
@@ -293,6 +309,10 @@ const CustomBubble = (
 							left: {
 								color: dark ? PRIMARY_LIGHT : PRIMARY_DARK,
 								opacity: 0.3,
+								padding: 5,
+							},
+							right: {
+								padding: 5,
 							},
 						}}
 						renderTime={() => <></>}
@@ -330,22 +350,22 @@ const CustomBubble = (
 					textStyle={{
 						left: {
 							color: dark ? PRIMARY_LIGHT : PRIMARY_DARK,
-							paddingTop: 3,
+							padding: 5,
 							fontSize: isEmoji(props.currentMessage?.text)
 								? 48
-								: 16,
+								: 14,
 							lineHeight: isEmoji(props.currentMessage?.text)
 								? 56
-								: 18,
+								: 24,
 						},
 						right: {
-							paddingTop: 3,
+							padding: 5,
 							fontSize: isEmoji(props.currentMessage?.text)
 								? 48
-								: 16,
+								: 14,
 							lineHeight: isEmoji(props.currentMessage?.text)
 								? 56
-								: 18,
+								: 24,
 						},
 					}}
 					onPress={() => setPressed(!pressed)}
@@ -353,7 +373,19 @@ const CustomBubble = (
 						props.setCurrent(props.currentMessage);
 						props.context.current?.open();
 					}}
-					renderTime={pressed ? props.renderTime : () => <></>}
+					renderTime={
+						pressed
+							? (tp: any) => (
+									<Time
+										{...tp}
+										timeTextStyle={{
+											left: { paddingHorizontal: 8 },
+											right: { paddingHorizontal: 8 },
+										}}
+									/>
+							  )
+							: () => <></>
+					}
 					renderCustomView={() => (
 						<View>
 							<View>
@@ -432,9 +464,12 @@ const CustomToolbar = (
 	const dark = useColorScheme() === "dark";
 	const { width, height } = useWindowDimensions();
 	const emitter = useContext(VoidContext);
-	const [emoji, setEmoji] = useState(false);
 	const [text, setText] = useState("");
-	const [selection, setSelection] = useState({ start: 0, end: 0 });
+	const [selection, setSelection] = useState<{ start: number; end: number }>({
+		start: 0,
+		end: 0,
+	});
+	const [emojiPicker, setEmojiPicker] = useState(false);
 
 	const send = () => {
 		emitter.emit(["request", "send"], {
@@ -448,14 +483,13 @@ const CustomToolbar = (
 		props.setReplying();
 	};
 
-	const insertEmoji = (emoji: string) => {
-		setText((text) => {
-			return (
+	const insertEmoji = (e: string) => {
+		setText(
+			(text) =>
 				text.slice(0, selection.start) +
-				`${emoji} ` +
+				`${e} ` +
 				text.slice(selection.end)
-			);
-		});
+		);
 	};
 
 	const renderComposer = (cprops: ComposerProps) => (
@@ -486,7 +520,7 @@ const CustomToolbar = (
 							width: 24,
 							height: 24,
 						}}
-						borderRadius={12}
+						style={{ borderRadius: 12 }}
 					/>
 				</TouchableOpacity>
 			)}
@@ -498,20 +532,28 @@ const CustomToolbar = (
 					setText(text);
 				}}
 				textInputProps={{
+					autoFocus: true,
+					selection,
 					onSelectionChange: (e) =>
 						setSelection(e.nativeEvent.selection),
+					onKeyPress: (e) => {
+						if (e.nativeEvent.key === "Enter" && text) {
+							e.preventDefault();
+							send();
+						}
+					},
 				}}
 			/>
 			<Palette
-				visible={emoji}
-				onDismiss={() => setEmoji(false)}
+				visible={emojiPicker}
+				onDismiss={() => setEmojiPicker(false)}
 				onPress={insertEmoji}
 				anchor={
 					<IconButton
 						icon="emoticon"
 						size={24}
 						color={PRIMARY_BLUE}
-						onPress={() => setEmoji(true)}
+						onPress={() => setEmojiPicker(true)}
 					/>
 				}
 			/>
@@ -645,7 +687,7 @@ const Participants = React.forwardRef<
 								width: size,
 								height: size,
 							}}
-							borderRadius={size / 2}
+							style={{ borderRadius: size / 2 }}
 						/>
 					)}
 				/>
@@ -673,9 +715,7 @@ export const Conversation: React.FC<{
 	route: RouteProp<any>;
 }> = ({ navigation, route }) => {
 	const emitter = useContext(VoidContext);
-	const prefs = useContext(PrefsContext);
 	const dark = useColorScheme() === "dark";
-	const [log, setLog] = useState<levelup.LevelUp>();
 
 	const [rename, setRename] = useState(false);
 	const [newName, setNewName] = useState("");
@@ -686,14 +726,15 @@ export const Conversation: React.FC<{
 
 	const reactions = useRef<Modalize>(null);
 	const context = useRef<Modalize>(null);
-	const actions = useRef<Modalize>(null);
 	const profile = useRef<Modalize>(null);
 	const participants = useRef<Modalize>(null);
 	const [currentUser, setCurrentUser] = useState<Message["user"]>();
 
 	const [attachments, setAttachments] = useState<string[]>([]);
-	const [replying, setReplying] = useState<ReplyingTo>();
 	const [customReaction, setCustomReaction] = useState(false);
+	const [replying, setReplying] = useState<ReplyingTo>();
+
+	const [pictureDir, setPictureDir] = useState("");
 
 	const messageMapper = (
 		message: ChatMessage | undefined,
@@ -723,7 +764,9 @@ export const Conversation: React.FC<{
 							if (m._id !== message.id) {
 								return m;
 							}
-							m.image = a;
+							m.image = tauri.convertFileSrc(
+								a.slice("file://".length)
+							);
 							return m;
 						})
 					)
@@ -763,16 +806,9 @@ export const Conversation: React.FC<{
 			),
 		} as NativeStackNavigationOptions);
 	}, [navigation, route]);
-	useEffect(
-		() =>
-			setLog(
-				sublevel(prefs, "VOID_MESSAGE_LOG", {
-					keyEncoding: "utf8",
-					valueEncoding: "utf8",
-				})
-			),
-		[]
-	);
+	useEffect(() => {
+		tauriPath.pictureDir().then(setPictureDir);
+	}, []);
 	useEffect(() => {
 		const listener1 = emitter.on(
 			["conversation", (route.params as any).id as string],
@@ -784,6 +820,10 @@ export const Conversation: React.FC<{
 					)
 				);
 				setLoading(false);
+				localStorage.setItem(
+					(route.params as any).id,
+					msgs[0]?.id || ""
+				);
 			}
 		);
 		const listener2 = emitter.on(
@@ -797,7 +837,7 @@ export const Conversation: React.FC<{
 						].filter((m) => !!m)
 					);
 				});
-				log?.put((route.params as any).id, msg.message.id);
+				localStorage.setItem((route.params as any).id, msg.message.id);
 			}
 		);
 		const listener3 = emitter.on(
@@ -844,23 +884,12 @@ export const Conversation: React.FC<{
 			listener3.off();
 			listener4.off();
 		};
-	}, [log]);
+	}, []);
 	useEffect(() => {
 		emitter.emit(
 			["request", "conversation", (route.params as any).id as string],
 			{}
 		);
-	}, []);
-	useEffect(() => {
-		notifee
-			.getDisplayedNotifications()
-			.then((notifications) =>
-				notifee.cancelDisplayedNotifications(
-					notifications
-						.map((n) => n.id || "")
-						.filter((n) => n.startsWith((route.params as any).id))
-				)
-			);
 	}, []);
 
 	const react = (reaction: string) => {
@@ -881,19 +910,11 @@ export const Conversation: React.FC<{
 		context.current?.close();
 	};
 
-	const insertEmoji = (e: string) =>
-		setText(
-			(text) =>
-				text.slice(0, selection.start) +
-				`${e} ` +
-				text.slice(selection.end)
-		);
-
 	const loadEarlier = () => {
 		setLoading(true);
 		emitter.emit(
 			["request", "conversation", (route.params as any).id as string],
-			{ last: messages[messages.length - 1]._id as string }
+			{ last: messages[messages.length - 1]?._id as string }
 		);
 	};
 
@@ -921,7 +942,19 @@ export const Conversation: React.FC<{
 					messagesContainerStyle={{
 						paddingBottom: 7 + attachments.length * 48,
 					}}
-					onPressActionButton={() => actions.current?.open()}
+					onPressActionButton={() =>
+						dialog
+							.open({
+								title: "Attach File",
+								multiple: true,
+								defaultPath: pictureDir,
+							})
+							.then((docs: any) => {
+								if (docs) {
+									setAttachments((a) => [...docs, ...a]);
+								}
+							})
+					}
 					onPressAvatar={(user) => {
 						setCurrentUser(user);
 						profile.current?.open();
@@ -930,6 +963,18 @@ export const Conversation: React.FC<{
 					onLoadEarlier={loadEarlier}
 					isLoadingEarlier={loading}
 					infiniteScroll
+					renderActions={(props) => (
+						<Actions
+							{...props}
+							icon={() => (
+								<Icon
+									name="paperclip"
+									size={32}
+									color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
+								/>
+							)}
+						/>
+					)}
 					renderBubble={(props) => (
 						<CustomBubble
 							{...props}
@@ -951,77 +996,6 @@ export const Conversation: React.FC<{
 						/>
 					)}
 				/>
-				<Modalize
-					ref={actions}
-					withHandle={false}
-					adjustToContentHeight
-					childrenStyle={{
-						backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
-					}}
-				>
-					<View
-						style={{
-							flexDirection: "row",
-							alignItems: "center",
-							justifyContent: "space-around",
-						}}
-					>
-						<IconButton
-							icon="camera"
-							size={32}
-							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-							onPress={() => {
-								ImagePicker.launchCameraAsync({
-									quality: 0.9,
-								}).then((image) => {
-									if (!image.cancelled) {
-										setAttachments((a) => [
-											image.uri,
-											...a,
-										]);
-									}
-								});
-								actions.current?.close();
-							}}
-						/>
-						<IconButton
-							icon="image"
-							size={32}
-							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-							onPress={() => {
-								ImagePicker.launchImageLibraryAsync().then(
-									(image) => {
-										if (!image.cancelled) {
-											setAttachments((a) => [
-												image.uri,
-												...a,
-											]);
-										}
-									}
-								);
-								actions.current?.close();
-							}}
-						/>
-						<IconButton
-							icon="paperclip"
-							size={32}
-							color={dark ? PRIMARY_LIGHT : PRIMARY_DARK}
-							onPress={() => {
-								DocumentPicker.getDocumentAsync().then(
-									(doc) => {
-										if (doc.type === "success") {
-											setAttachments((a) => [
-												doc.uri,
-												...a,
-											]);
-										}
-									}
-								);
-								actions.current?.close();
-							}}
-						/>
-					</View>
-				</Modalize>
 				<Modalize
 					ref={reactions}
 					withHandle={false}
@@ -1111,7 +1085,9 @@ export const Conversation: React.FC<{
 										color={
 											dark ? PRIMARY_LIGHT : PRIMARY_DARK
 										}
-										onPress={() => setCustomReaction(true)}
+										onPress={() =>
+											setCustomReaction(() => true)
+										}
 									/>
 								}
 							/>

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
+	useColorScheme,
 	FlatList,
 	Image,
 	SafeAreaView,
@@ -7,13 +8,13 @@ import {
 	View,
 } from "react-native";
 import {
+	ActivityIndicator,
 	Button,
 	Dialog,
 	FAB,
+	List,
 	Portal,
-	Subheading,
 	TextInput,
-	Title,
 } from "react-native-paper";
 import Icon from "@expo/vector-icons/MaterialCommunityIcons";
 import * as ImagePicker from "expo-image-picker";
@@ -23,9 +24,11 @@ import { invoke } from "@tauri-apps/api";
 import { Store } from "tauri-plugin-store-api";
 import type { SavedIdentity } from "./interface";
 import { VoidContext } from "./context";
+import { PRIMARY_DARK, PRIMARY_LIGHT } from "./colors";
 
-export const Login: React.FC = ({ prefs }) => {
+export const Login: React.FC = () => {
 	const emitter = useContext(VoidContext);
+	const dark = useColorScheme() === "dark";
 	const [iddb, setIdDB] = useState<Store>();
 	const [identities, setIdentities] = useState<SavedIdentity[]>([]);
 	const [prompt, setPrompt] = useState(false);
@@ -33,6 +36,7 @@ export const Login: React.FC = ({ prefs }) => {
 	const [bio, setBio] = useState("");
 	const [avatar, setAvatar] = useState("");
 	const [base64, setBase64] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		const db = new Store(".void-identity");
@@ -45,14 +49,14 @@ export const Login: React.FC = ({ prefs }) => {
 			}
 			setIdentities(ids);
 		})();
-	}, [prefs]);
+	}, []);
 
 	const pickPhoto = () => {
 		ImagePicker.launchImageLibraryAsync({
 			allowsEditing: true,
 			aspect: [1, 1],
 			base64: true,
-			quality: 0.4,
+			quality: 0.6,
 		}).then((image) => {
 			if (!image.cancelled) {
 				setAvatar(image.uri);
@@ -63,14 +67,11 @@ export const Login: React.FC = ({ prefs }) => {
 	const createIdentity = () => {
 		const pk = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES);
 		const sk = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES);
-		const enc = Buffer.alloc(32);
 		sodium.crypto_sign_keypair(pk, sk);
-		sodium.randombytes_buf(enc);
 		const id: SavedIdentity = {
 			displayName: name,
 			publicKey: pk.toString("hex"),
 			secretKey: sk.toString("hex"),
-			encryptionKey: enc.toString("hex"),
 		};
 		iddb?.set(
 			id.publicKey,
@@ -87,6 +88,7 @@ export const Login: React.FC = ({ prefs }) => {
 			)
 			.then(() => {
 				setPrompt(false);
+				setLoading(true);
 				emitter.emit(["request", "create"], {
 					...id,
 					name,
@@ -109,50 +111,58 @@ export const Login: React.FC = ({ prefs }) => {
 	};
 	const onIdentityPress = (pk: string) => {
 		invoke("get_identity", { publicKey: pk }).then((json) => {
+			setLoading(true);
 			emitter.emit(["request", "open"], JSON.parse(json as string));
 		});
 	};
 
 	const renderIdentity = ({ item }: { item: SavedIdentity }) => (
-		<TouchableOpacity onPress={() => onIdentityPress(item.publicKey)}>
-			<View
-				style={{
-					flexDirection: "row",
-					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					paddingVertical: 10,
-					paddingHorizontal: 15,
-				}}
-			>
+		<List.Item
+			key={item.publicKey}
+			onPress={() => onIdentityPress(item.publicKey)}
+			title={item.displayName}
+			description={item.publicKey}
+			descriptionNumberOfLines={1}
+			descriptionEllipsizeMode="middle"
+			left={(props) => (
 				<Image
-					source={{ uri: emitter.getAvatar(item.publicKey) }}
-					style={{
-						width: 48,
-						height: 48,
-						borderRadius: 24,
+					source={{
+						uri: emitter.getAvatar(item.publicKey),
 					}}
+					{...props}
+					style={{ width: 48, height: 48, borderRadius: 24 }}
 				/>
-				<View style={{ marginLeft: 15 }}>
-					<Title>{item.displayName}</Title>
-					<Subheading ellipsizeMode="middle" numberOfLines={1}>
-						{item.publicKey}
-					</Subheading>
-				</View>
-			</View>
-		</TouchableOpacity>
+			)}
+		/>
 	);
 
-	return (
-		<SafeAreaView style={{ flex: 1 }}>
+	return loading ? (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				alignItems: "center",
+				justifyContent: "center",
+				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+			}}
+		>
+			<ActivityIndicator size="large" />
+		</SafeAreaView>
+	) : (
+		<SafeAreaView
+			style={{
+				flex: 1,
+				backgroundColor: dark ? PRIMARY_DARK : PRIMARY_LIGHT,
+			}}
+		>
 			<FlatList data={identities} renderItem={renderIdentity} />
 			<FAB
 				icon="plus"
+				label="Create Identity"
 				onPress={() => setPrompt(true)}
 				style={{
 					position: "absolute",
-					bottom: 0,
-					right: 0,
-					margin: 25,
+					bottom: 16,
+					right: 16,
 				}}
 			/>
 			<Portal>

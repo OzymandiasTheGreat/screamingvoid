@@ -1,8 +1,8 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "",
-    "beforeDevCommand": "yarn web",
+    "beforeBuildCommand": "expo build:web",
+    "beforeDevCommand": "",
     "devPath": "http://localhost:19006",
     "distDir": "../web-build"
   },
@@ -12,7 +12,6 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true,
       "shell": {
         "sidecar": true,
         "scope": [
@@ -26,12 +25,37 @@
       "protocol": {
         "asset": true,
         "assetScope": ["**"]
+      },
+      "notification": {
+        "all": true
+      },
+      "dialog": {
+        "all": false,
+        "ask": false,
+        "confirm": false,
+        "message": false,
+        "open": true,
+        "save": true
+      },
+      "path": {
+        "all": true
+      },
+      "fs": {
+        "all": false,
+        "copyFile": true,
+        "createDir": false,
+        "readDir": false,
+        "readFile": false,
+        "removeDir": false,
+        "removeFile": false,
+        "renameFile": false,
+        "writeFile": false
       }
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+      "category": "SocialNetworking",
+      "copyright": "MIT (c) 2022 - Tomas Ravinskas",
       "deb": {
         "depends": []
       },
@@ -43,8 +67,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
-      "longDescription": "",
+      "identifier": "me.screamingvoid.app",
+      "longDescription": "Like screaming into the Void...",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -62,7 +86,7 @@
       }
     },
     "security": {
-      "csp": "default-src tauri: asset: https://asset.localhost"
+      "csp": null
     },
     "updater": {
       "active": false

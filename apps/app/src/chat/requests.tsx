@@ -36,7 +36,7 @@ const Header: React.FC<NativeStackHeaderProps> = ({ back, navigation }) => {
 									width: size,
 									height: size,
 								}}
-								borderRadius={size / 2}
+								style={{ borderRadius: size / 2 }}
 							/>
 						)}
 						onPress={() => setVisible(true)}

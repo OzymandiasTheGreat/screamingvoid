@@ -208,29 +208,63 @@ export class VoidConversation extends EventEmitter2 {
 			valueEncoding: ChatMessage as any,
 		});
 		convo.live = convo.base.createReadStream({ live: true, tail: true });
-		convo.live.on(
-			"data",
-			async ({ key, value }: { key: Buffer; value: Buffer }) => {
-				const peer = Object.entries(convo.peers).find(
-					([hex, { input }]) => input.equals(key),
-				);
-				const sender = peer ? Buffer.from(peer[0], "hex") : null;
-				if (sender) {
-					const sig = value.slice(0, sodium.crypto_sign_BYTES);
-					const msg = value.slice(sodium.crypto_sign_BYTES);
-					if (sodium.crypto_sign_verify_detached(sig, msg, sender)) {
-						const op = ChatInput.decode(msg);
-						const timestamp = Buffer.allocUnsafe(8);
-						timestamp.writeBigUInt64BE(BigInt(op.timestamp));
-						const id = Buffer.concat([timestamp, sig]);
-						let replyTo = null;
-						switch (op.type) {
-							case ChatInputType.POST:
-							case ChatInputType.REPLY:
-								const message: ChatMessage = (
-									await convo.feed.get(id)
-								).value as any;
-								if (op.type === ChatInputType.REPLY) {
+		convo.live
+			.on("error", console.error)
+			.on(
+				"data",
+				async ({ key, value }: { key: Buffer; value: Buffer }) => {
+					const peer = Object.entries(convo.peers).find(
+						([hex, { input }]) => input.equals(key),
+					);
+					const sender = peer ? Buffer.from(peer[0], "hex") : null;
+					if (sender) {
+						const sig = value.slice(0, sodium.crypto_sign_BYTES);
+						const msg = value.slice(sodium.crypto_sign_BYTES);
+						if (
+							sodium.crypto_sign_verify_detached(
+								sig,
+								msg,
+								sender,
+							)
+						) {
+							const op = ChatInput.decode(msg);
+							const timestamp = Buffer.allocUnsafe(8);
+							timestamp.writeBigUInt64BE(BigInt(op.timestamp));
+							const id = Buffer.concat([timestamp, sig]);
+							let replyTo = null;
+							switch (op.type) {
+								case ChatInputType.POST:
+								case ChatInputType.REPLY:
+									const message: ChatMessage = (
+										await convo.feed.get(id)
+									).value as any;
+									if (op.type === ChatInputType.REPLY) {
+										replyTo = (
+											(
+												await convo.feed.get(
+													op.target as Buffer,
+												)
+											).value as ChatMessage
+										).sender;
+									}
+									convo.emit(["conversation", "message"], {
+										conversation: convo.id,
+										message,
+										replyTo,
+									});
+									return;
+								case ChatInputType.DELETE:
+									// const target: ChatMessage = (
+									// 	await convo.feed.get(op.target as Buffer)
+									// ).value as any;
+									// if (sender.equals(target.sender)) {
+									convo.emit(["conversation", "remove"], {
+										conversation: convo.id,
+										message: op.target,
+									});
+									return;
+								// }
+								case ChatInputType.REACT:
 									replyTo = (
 										(
 											await convo.feed.get(
@@ -238,42 +272,19 @@ export class VoidConversation extends EventEmitter2 {
 											)
 										).value as ChatMessage
 									).sender;
-								}
-								convo.emit(["conversation", "message"], {
-									conversation: convo.id,
-									message,
-									replyTo,
-								});
-								return;
-							case ChatInputType.DELETE:
-								// const target: ChatMessage = (
-								// 	await convo.feed.get(op.target as Buffer)
-								// ).value as any;
-								// if (sender.equals(target.sender)) {
-								convo.emit(["conversation", "remove"], {
-									conversation: convo.id,
-									message: op.target,
-								});
-								return;
-							// }
-							case ChatInputType.REACT:
-								replyTo = (
-									(await convo.feed.get(op.target as Buffer))
-										.value as ChatMessage
-								).sender;
-								convo.emit(["conversation", "react"], {
-									conversation: convo.id,
-									target: op.target,
-									replyTo,
-									sender: op.sender,
-									reaction: op.reaction,
-								});
-								return;
+									convo.emit(["conversation", "react"], {
+										conversation: convo.id,
+										target: op.target,
+										replyTo,
+										sender: op.sender,
+										reaction: op.reaction,
+									});
+									return;
+							}
 						}
 					}
-				}
-			},
-		);
+				},
+			);
 		return convo;
 	}
 
@@ -335,7 +346,7 @@ export class VoidConversation extends EventEmitter2 {
 	}
 
 	async deleteMessage(target: Buffer): Promise<void> {
-		const entry = await this.feed.get(target);
+		const entry = await this.feed.get(target).catch(() => null);
 		if (entry) {
 			const message: ChatMessage = entry.value as any;
 			if (this.host.keyPair.publicKey.equals(message.sender)) {
@@ -402,7 +413,7 @@ export class VoidConversation extends EventEmitter2 {
 		message: Buffer,
 		prefix?: string,
 	): Promise<string> {
-		const entry = await this.feed.get(message);
+		const entry = await this.feed.get(message).catch(() => null);
 		if (entry) {
 			const msg: ChatMessage = entry.value as any;
 			const root = path.join(

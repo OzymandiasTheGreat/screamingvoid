@@ -21,7 +21,6 @@ import { Login } from "./src/login";
 import { Home } from "./src/home/home";
 import { ChatRequests } from "./src/chat/requests";
 import { Conversation } from "./src/chat/conversation";
-import { EmojiStorage } from "./src/emoji-storage";
 import { PRIMARY_DARK, PRIMARY_LIGHT } from "./src/colors";
 import { MutedConversations } from "./src/chat/muted";
 
@@ -99,12 +98,6 @@ const App: React.FC<{ emitter: VoidInterface }> = ({ emitter }) => {
 			}),
 		[]
 	);
-	useEffect(() => {
-		if (prefs) {
-			const storage = new EmojiStorage(prefs);
-			return () => storage.close();
-		}
-	}, [prefs]);
 
 	return (
 		<VoidContext.Provider value={emitter}>

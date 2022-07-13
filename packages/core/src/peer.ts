@@ -57,6 +57,7 @@ export class VoidPeer extends EventEmitter2 {
 
 		const replication = this.plex.createSharedStream(REPLICATION);
 		replication
+			.on("error", console.error)
 			.pipe(host.corestore.replicate(info.client))
 			.pipe(replication);
 	}
@@ -115,20 +116,59 @@ export class VoidPeer extends EventEmitter2 {
 			peer.sharedSecret = sharedSecret;
 			peer.hostId = hostId;
 		}
-		const requestPrefix = Buffer.concat([CONVO_REQUEST, peer.hostId]);
+		const tag = await peer.feed.get(VOID_VERSION).catch(() => null);
+		if (!tag) {
+			await peer.close();
+			throw new InvalidPeer();
+		}
+		const version = VersionTag.decode(tag.value as Buffer);
+		if (!cached || cached.profile < version.profile) {
+			const name = await peer.feed
+				.get(VOID_PEER_NAME)
+				.catch(() => ({ value: "" }));
+			const bio = await peer.feed
+				.get(VOID_PEER_BIO)
+				.catch(() => ({ value: "" }));
+			await host.peerCache.put(peer.publicKey, {
+				publicKey: peer.publicKey,
+				boxPublicKey: peer.boxPublicKey,
+				sharedSecret: peer.sharedSecret,
+				hostId: peer.hostId,
+				profile: version.profile,
+				name: name.value.toString(),
+				bio: bio.value.toString(),
+			} as CachedPeer);
+		}
+		peer.feed
+			.get(VOID_PEER_AVATAR)
+			.then(({ value }) => {
+				const avatar = imageToUri(value as Buffer);
+				peer.emit(["peer", "avatar"], {
+					publicKey: peer.publicKey,
+					avatar,
+				});
+			})
+			.catch(console.error);
+		peer.emit(["peer", "connect"], peer.publicKey);
+		return peer;
+	}
+
+	replicate() {
+		const requestPrefix = Buffer.concat([CONVO_REQUEST, this.hostId]);
 		const requestSuffix = Buffer.concat([
 			CONVO_REQUEST,
-			peer.hostId,
+			this.hostId,
 			Buffer.allocUnsafe(72).fill(0xff),
 		]);
-		const inputPrefix = Buffer.concat([CONVO_INPUT, peer.hostId]);
+		const inputPrefix = Buffer.concat([CONVO_INPUT, this.hostId]);
 		const inputSuffix = Buffer.concat([
 			CONVO_INPUT,
-			peer.hostId,
+			this.hostId,
 			Buffer.allocUnsafe(72).fill(0xff),
 		]);
-		peer.live = peer.feed
+		this.live = this.feed
 			.createHistoryStream({ live: true })
+			.on("error", console.error)
 			.on(
 				"data",
 				async ({
@@ -148,22 +188,25 @@ export class VoidPeer extends EventEmitter2 {
 							try {
 								const id = extractConvoId(
 									key,
-									host.boxKeyPair,
+									this.host.boxKeyPair,
 								);
 								const convo: ConversationInput =
-									await host.convoStore
+									await this.host.convoStore
 										.get(id)
 										.catch(() => null);
-								const msg = unseal(value, host.boxKeyPair);
+								const msg = unseal(
+									value,
+									this.host.boxKeyPair,
+								);
 								const req = ConversationRequest.decode(msg);
 								if (convo && convo.name !== req.name) {
-									peer.emit(["conversation", "rename"], {
+									this.emit(["conversation", "rename"], {
 										id,
 										name: req.name,
 									});
 								}
 								if (!convo) {
-									peer.emit(["conversation", "request"], {
+									this.emit(["conversation", "request"], {
 										id,
 										name: req.name,
 										peers: req.peers,
@@ -179,38 +222,44 @@ export class VoidPeer extends EventEmitter2 {
 							try {
 								const id = extractConvoId(
 									key,
-									host.boxKeyPair,
+									this.host.boxKeyPair,
 								);
-								const msg = unseal(value, host.boxKeyPair);
+								const msg = unseal(
+									value,
+									this.host.boxKeyPair,
+								);
 								const input = ConversationPeer.decode(msg);
 								const convo: ConversationInput =
-									await host.convoStore
+									await this.host.convoStore
 										.get(id)
-										.catch(
-											() =>
-												new Promise((resolve) =>
-													setTimeout(resolve, 15000),
-												),
-										)
-										.then(() => host.convoStore.get(id))
-										.catch(
-											() =>
-												new Promise((resolve) =>
-													setTimeout(resolve, 15000),
-												),
-										)
-										.then(() => host.convoStore.get(id))
 										.catch(() => null);
 								if (convo) {
-									if (!convo.peers[peer.peerId]) {
-										convo.peers[peer.peerId] = input;
-										await host.convoStore.put(id, convo);
-										peer.emit(["conversation", "input"], {
+									if (!convo.peers[this.peerId]) {
+										convo.peers[this.peerId] = input;
+										await this.host.convoStore.put(
 											id,
-											publicKey: peer.publicKey,
+											convo,
+										);
+										this.emit(["conversation", "input"], {
+											id,
+											publicKey: this.publicKey,
 										});
 									}
 								} else {
+									let orphans = this.host.orphanedInputs.get(
+										id.toString("hex"),
+									);
+									if (!orphans) {
+										orphans = new Map<
+											string,
+											ConversationPeer
+										>();
+									}
+									orphans.set(this.peerId, input);
+									this.host.orphanedInputs.set(
+										id.toString("hex"),
+										orphans,
+									);
 									console.error(
 										`Found input for unknown conversation: "${id.toString(
 											"hex",
@@ -224,33 +273,5 @@ export class VoidPeer extends EventEmitter2 {
 					}
 				},
 			);
-		const tag = await peer.feed.get(VOID_VERSION);
-		if (!tag) {
-			await peer.close();
-			throw new InvalidPeer();
-		}
-		const version = VersionTag.decode(tag.value as Buffer);
-		if (!cached || cached.profile < version.profile) {
-			const name = await peer.feed.get(VOID_PEER_NAME);
-			const bio = await peer.feed.get(VOID_PEER_BIO);
-			await host.peerCache.put(peer.publicKey, {
-				publicKey: peer.publicKey,
-				boxPublicKey: peer.boxPublicKey,
-				sharedSecret: peer.sharedSecret,
-				hostId: peer.hostId,
-				profile: version.profile,
-				name: name.value.toString(),
-				bio: bio.value.toString(),
-			} as CachedPeer);
-			peer.feed.get(VOID_PEER_AVATAR).then(({ value }) => {
-				const avatar = imageToUri(value as Buffer);
-				peer.emit(["peer", "avatar"], {
-					publicKey: peer.publicKey,
-					avatar,
-				});
-			});
-		}
-		peer.emit(["peer", "connect"], peer.publicKey);
-		return peer;
 	}
 }

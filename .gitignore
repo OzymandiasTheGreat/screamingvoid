@@ -75,3 +75,4 @@ packages/core/types
 packages/core/fixtures
 **/src-tauri/binaries
 **/src-node/bin
+web-build/

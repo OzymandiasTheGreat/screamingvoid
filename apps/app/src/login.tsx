@@ -70,7 +70,7 @@ export const Login: React.FC = () => {
 			allowsEditing: true,
 			aspect: [1, 1],
 			base64: true,
-			quality: 0.4,
+			quality: 0.6,
 		}).then((image) => {
 			if (!image.cancelled) {
 				setAvatar(image.uri);
@@ -163,6 +163,8 @@ export const Login: React.FC = () => {
 			onPress={() => onIdentityPress(item.publicKey)}
 			title={item.displayName}
 			description={item.publicKey}
+			descriptionNumberOfLines={1}
+			descriptionEllipsizeMode="middle"
 			left={(props) => (
 				<Image
 					source={{ uri: emitter.getAvatar(item.publicKey) }}
@@ -199,9 +201,8 @@ export const Login: React.FC = () => {
 				onPress={() => setPrompt(true)}
 				style={{
 					position: "absolute",
-					bottom: 0,
-					right: 0,
-					margin: 25,
+					bottom: 16,
+					right: 16,
 				}}
 			/>
 			<Portal>

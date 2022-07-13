@@ -105,7 +105,7 @@ export const Profile = React.forwardRef<Modalize, { user?: string }>(
 										width: 128,
 										height: 128,
 									}}
-									borderRadius={64}
+									style={{ borderRadius: 64 }}
 								/>
 							)}
 							size={128}
