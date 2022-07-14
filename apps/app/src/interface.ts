@@ -673,8 +673,6 @@ export class VoidInterface extends EventEmitter2 {
 				data.bio,
 				data.avatar
 			);
-			// TODO DELETEME
-			this.core.onAny(console.log);
 			this.subscribe();
 			await RNFS.writeFile(
 				path.join(AVATARS, data.publicKey),

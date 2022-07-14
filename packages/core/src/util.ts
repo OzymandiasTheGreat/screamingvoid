@@ -31,11 +31,21 @@ export async function uriToImage(uri: string): Promise<Buffer> {
 		const base64 = uri.slice(uri.indexOf(","));
 		data = Buffer.from(base64, "base64");
 	} else {
-		mimetype = mimetypes.lookup(uri) as string;
-		if (!mimetype) {
-			return Buffer.alloc(0);
+		if (
+			await fs
+				.access(uri)
+				.then(() => true)
+				.catch(() => false)
+		) {
+			mimetype = mimetypes.lookup(uri) as string;
+			if (!mimetype) {
+				return Buffer.alloc(0);
+			}
+			data = await fs.readFile(uri);
+		} else {
+			mimetype = "image/jpeg";
+			data = Buffer.from(uri, "base64");
 		}
-		data = await fs.readFile(uri);
 	}
 	return Image.encode({ mimetype, data });
 }
