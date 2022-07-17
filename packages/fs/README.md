@@ -3,6 +3,19 @@
 Node 16's fs API implemented on top of [react-native-fs](https://github.com/itinance/react-native-fs)
 Implementation is mostly complete and fully tested.
 
+-----
+WARNING: After using this library, or rather react-native-fs, for a while,
+I've encountered a bug where new writes rarely write previously written data
+rather than current data. I'm unable to minimally reproduce this, but it happens
+regularly in production, resulting in corrupted data.
+
+As I'm failing to reliably reproduce this and with the adoption of JSI, I'm
+considering rewriting this library as JSI interface to filesystem.
+
+For now DO NOT USE IN PRODUCTION.
+
+-----
+
 - Async callback and `fs/promises` APIs are fully implemented.
 - Sync API cannot currently be implemented because of react-native/native bridge.
 - `promisify` API should work, but I haven't tested it yet.
