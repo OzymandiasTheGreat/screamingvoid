@@ -1,0 +1,34 @@
+{
+	"name": "@screamingvoid/fs-next",
+	"version": "0.1.1",
+	"description": "Full Node.js 16 compatible fs implementation in C++ over JSI for react-native Android/iOS",
+	"contributors": [
+		"Tomas Ravinskas <tomas.rav@gmail.com> (https://tomasrav.me)"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/OzymandiasTheGreat/screamingvoid.git"
+	},
+	"main": "src/index.ts",
+	"private": true,
+	"scripts": {},
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
+	"dependencies": {
+		"buffer": "^6.0.3"
+	},
+	"devDependencies": {
+		"@types/react": "^17.0.43",
+		"@types/react-native": "^0.67.6",
+		"react": "^17.0.2",
+		"react-native": "^0.68.2",
+		"tape": "^5.3.1"
+	},
+	"peerDependencies": {
+		"react": "*",
+		"react-native": "*"
+	}
+}
