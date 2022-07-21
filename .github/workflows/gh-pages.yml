@@ -22,8 +22,8 @@ jobs:
       - name: Build
         run: |
           yarn
-          yarn --workspace @screamingvoid/website build
-          yarn --workspace @screamingvoid/website export
+          yarn workspace @screamingvoid/website build
+          yarn workspace @screamingvoid/website export
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
