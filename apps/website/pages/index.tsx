@@ -57,7 +57,7 @@ export default function App() {
 				</Text>
 				<Text
 					accessibilityRole="link"
-					href="https://discord.gg/7y547p7c"
+					href="https://discord.gg/hjrc3ktY9J"
 					style={{ color: "#fafafa", fontSize: 16 }}
 				>
 					<Icon
